@@ -1,0 +1,170 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+%\usepackage[dvipdfmx]{hyperref,graphicx}
+\usepackage{graphicx}
+\usepackage{apacite}
+
+\usepackage[colorlinks,citecolor=red,urlcolor=blue,bookmarks=false,hypertexnames=true]{hyperref,natbib} 
+\usepackage[top=15truemm]{geometry}
+%\usepackage[]{natbib} 
+\bibpunct[:]{(}{)}{,}{a}{}{,}
+\setlength{\textwidth}{\paperwidth}     % ひとまず紙面を本文領域に
+\setlength{\oddsidemargin}{-5.4truemm}  % 左の余白を20mm(=1inch-5.4mm)に
+\setlength{\evensidemargin}{-5.4truemm} % 
+\addtolength{\textwidth}{-40truemm}     % 右の余白も20mmに
+\renewcommand{\baselinestretch}{0.3}
+
+\usepackage{setspace}
+\setstretch{1.2}
+
+\title{An MPEC Estimator for Sequential Search model}
+\author{Suguru Otani}
+\date{December 2023}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Consumer search process to gather information about possible options is prevalent in the actual choice behavior.
+The search process has increasingly become observable to researchers. 
+For example, browsing data allows the researcher to observe which options an agent inspects before making a choice. 
+The increased availability of consumer search data has led researchers to estimate structural models of consumer search behavior, summarized in \cite{ursu2023sequential}. 
+The current benchmark model nests the inner loop step to solve implicit functions regarding reserved prices of searching decisions as a fixed point problem, which is known to be computationally burdensome.
+
+To overcome the problem, we propose a new estimator based on the mathematical program
+with equilibrium constraints (MPEC) approach advocated by \cite{su2012constrained}. 
+MPEC is a constrained optimization problem whose constraint structure contains the equilibrium constraints.
+The main advantage of MPEC is that MPEC does not need to solve the fixed point problem iteratively, which is well known in the demand estimation \citep{dube2012improving}, dynamic programming \citep{su2012constrained,egesdal2015estimating}, and misclassification model \citep{lu2014mpec}.
+Based on Monte Carlo simulations, we show that MPEC estimator works better for the sequential search model relative to the nested fixed point approaches and the advantage carries over. 
+We also show that increasing the sample size improves the accuracy of estimation. 
+We conclude that XXX.
+
+\section{Weitzman's sequential search model}
+
+\subsection{The Weitzman (1979) Framework}
+I construct the sequential
+search model based on \cite{weitzman1979optimal}.
+See the detail in the unified survey of \cite{ursu2023sequential} and \cite{honka2019empirical}. 
+A decision maker $i$ faces a set of $\mathcal{J}=\{1,\cdots,J\}$ boxes and box $j$ gives a potential reward $u_{ij}\in \mathbb{R}$ independently drawn from a known
+distribution $F_{ij}(u)$.
+Opening box $j$ takes cost $c_{ij}\in \mathbb{R}^{++}$. 
+An outside option is denoted as $j = 0$ with a known reward $u_{i0}$ is available at no cost.
+The decision maker
+opens boxes via sequential search steps and her goal is to maximize her expected reward net of total costs.
+
+Suppose that the decision maker has opened a set \(S_{i}\) of boxes,
+which revealed a maximum reward value of \(u_{i}^{*}=\max _{j \in S_{i} \cup 0} u_{i j}\), and \(\bar{S}_{i}\) unopened boxes can still be
+opened. 
+Her dynamic programming problem choosing to stop opening boxes, in which case she
+gets payoff \(u_{i}^{*}\), or to continue opening boxes is described
+by the following Bellman equation:
+\begin{align}
+    V\left(\bar{S}_{i}, u_{i}^{*}\right)=\max \left\{u_{i}^{*}, \max _{j \in \bar{S}_{i}}\left\{-c_{i j}+W_{j}\left(\bar{S}_{i}, u_{i}^{*}\right)\right\}\right\}
+\end{align}
+where \(W_{j}\left(\bar{S}_{i}, u_{i}^{*}\right)\) is the expected value of continuing to open boxes and is
+defined as
+\begin{align}
+    W_{j}\left(\bar{S}_{i}, u_{i}^{*}\right)=V\left(\bar{S}_{i} \backslash j, u_{i}^{*}\right) \int_{-\infty}^{u_{i}^{*}} d F_{i j}(u)+\int_{u_{i}^{*}}^{\infty} V\left(\bar{S}_{i} \backslash j, u\right) d F_{i j}(u).
+\end{align}
+Also, the reservation utility of a product \(z_{i j}\) is the utility level defined as 
+\begin{align}
+    \int_{z_{i j}}^{\infty}\left(u_{i j}-z_{i j}\right) d F_{i j}\left(u_{i j}\right)=c_{i j}.
+\end{align}
+
+A set of optimal decision rules, developed by
+\cite{weitzman1979optimal}, is used to characterize consumers' optimal search and choice strategies. 
+The rules are as follows:
+\begin{enumerate}
+    \item Consumers know the true distribution(s) \(F_{i j}(u)\).
+    \item Search fully reveals the utility associated with product \(j\).
+    \item For each consumer \(i, u_{i j}\) is independently (across \(j\) ) drawn from \(F_{i j}(u)\).
+\end{enumerate}
+Then, the optimal search and choice decision
+rules are expressed as follows:
+\begin{enumerate}
+    \item Selection Rule: The consumer searches in decreasing order of reservation utilities.
+    \item Stopping Rule: Search terminates when the maximum observed utility exceeds the reservation utility of any unsearched product.
+    \item Choice Rule: Once the consumer stops searching, she chooses the product with the highest observed utility among all searched options.
+\end{enumerate}
+
+\subsection{Parametrizations for Empirical Work}
+
+Empirical economists often assume consumer $i$'s utility from product $j$ has two additively separable components:
+\begin{align}
+    u_{i j} & =\delta_{i j}+\varepsilon_{i j}  =\left(\xi_{i j}+\mu_{i j}\right)+\varepsilon_{i j},\\
+    \quad \quad \varepsilon_{i j}&\sim_{i.i.d} N(0,\sigma_{\mu}),\quad \mu_{i j} \sim_{i.i.d} N(0,\sigma_{\varepsilon})\nonumber
+\end{align}
+where \(\delta_{i j}\) is utility which is known by the consumer prior to search ("pre-search
+utility" in the following) and \(\varepsilon_{i j}\) is utility that is only known by the consumer
+after search ("post-search taste shock" in the following). 
+We assume that the pre-search utility
+\(\delta_{i j}\) consists of a component \(\xi_{i j}\) that can be observed by the researcher and a pre-search taste shock \(\mu_{i j}\) that
+cannot be observed by the researcher. 
+According to \cite{ursu2023sequential}, we need to further normalize their variance by setting $\sigma_{\mu}= \sigma_{\varepsilon} =1$. 
+
+Under the assumption of normally distributed post-search taste shocks, we can derive the following
+expression for the reservation utility:
+\begin{align}
+    z_{i j}=\delta_{i j}+m\left(c_{i j}\right)=\xi_{i j}+\mu_{i j}+m\left(c_{i j}\right) 
+\end{align}
+where \(m\left(c_{i j} \right)\) is the implicit function that solves the following equation (see \cite{kim2010online}):
+\begin{align}
+    c_{i j}=\phi(m)+m \times[\Phi(m)-1] \label{eq:equilibrium_constraint}
+\end{align}
+with \(\phi\) and \(\Phi\) denoting the standard normal pdf and cdf, respectively. \cite{weitzman1979optimal} shows the existence and uniqueness of the solution of \eqref{eq:equilibrium_constraint}.
+
+There are four methods to solve \eqref{eq:equilibrium_constraint}. 
+A first approach, proposed by \cite{kim2010online}, is pre-computing the mapping between $m$ and $c$ and saving it in a look-up table.
+A second approach proposed by \cite{jiang2021consumer} utilizes Newton's method to compute reservation utilities by successively better approximations to the root
+of a function 
+\begin{align*}
+    q(m)=(1-\Phi(m))\left(\frac{\phi(m)}{1-\Phi(m)}-m\right)-c=0.
+\end{align*}
+A third approach proposed by \cite{elberg2019dynamic} is to use a contraction mapping of
+\begin{align*}
+    \Gamma(m)=-c+\phi(m)+m \times \Phi(m).
+\end{align*}
+A fourth approach proposed by \cite{morozov2023measuring} is to directly estimate $m(c_{ij})$.
+
+\cite{ursu2023sequential} mention that (1) the first method introduces error from using linear interpolations for search cost
+values that are not equal to grid-point values, (2) the second and third methods avoid any error from using linear interpolation but involve defining a convergence threshold which can result in numerical errors when the threshold is too loose, (3) the fourth approach involves estimation error on $m(c_{ij})$. 
+In practice, both methods appear to converge quickly and allow researchers to set tight convergence thresholds thus avoiding numerical problems. 
+Similar problems on demand estimation are discussed and resolved by MPEC introduced next \citep{dube2012improving}. 
+
+
+
+\section{An MPEC estimator for the sequential search model}
+As the fifth method, I propose a novel and simple estimator for the sequential search model by utilizing
+the Mathematical Programming with Equilibrium Constraints (MPEC) procedure advocated
+by \cite{su2012constrained}. 
+Our setting is similar to \cite{su2012constrained} in which the likelihood function
+function with equilibrium constraints is constructed. 
+MPEC estimator avoids the iterative computations to find the fixed point by evaluating the equilibrium equations as
+constraints.
+
+Define $\theta=$
+Given the optimal decision rules and reservation utility formula, an MPEC estimator solves the following constrained problem:
+\begin{align*}
+    &\max_{\theta} \sum_{i\in \mathcal{N}} \log L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})\\
+    \text{s.t.}\quad u_{i j} & =\left(\xi_{i j}+\mu_{i j}\right)+\varepsilon_{i j}\\
+    z_{i j}&=\xi_{i j}(\theta)+\mu_{i j}+m\left(c_{i j}\right) \\
+    c_{i j}&=\phi(m)+m \times[\Phi(m)-1] 
+\end{align*}
+where individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$ is derived in Appendix.
+
+\section{Results}
+
+\section{Conclusion}
+
+
+
+
+
+\bibliographystyle{aer}
+\bibliography{sequential_search}
+
+\end{document}
