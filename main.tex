@@ -131,8 +131,8 @@ A third approach proposed by \cite{elberg2019dynamic} is to use a contraction ma
 A fourth approach proposed by \cite{morozov2023measuring} is to directly estimate $m(c_{ij})$.
 
 \cite{ursu2023sequential} mention that (1) the first method introduces error from using linear interpolations for search cost
-values that are not equal to grid-point values, (2) the second and third methods avoid any error from using linear interpolation but involve defining a convergence threshold which can result in numerical errors when the threshold is too loose, (3) the fourth approach involves estimation error on $m(c_{ij})$. 
-In practice, both methods appear to converge quickly and allow researchers to set tight convergence thresholds thus avoiding numerical problems. 
+values that are not equal to grid-point values, (2) the second and third methods avoid any error from using linear interpolation but involve iterations of finding $m$ and defining a convergence threshold which can result in numerical errors when the threshold is too loose, (3) the fourth approach involves estimation error on $m(c_{ij})$. 
+In practice, both methods appear to converge quickly and allow researchers to set tight convergence thresholds thus avoiding numerical problems \citep{ursu2023sequential}. 
 Similar problems on demand estimation are discussed and resolved by MPEC introduced next \citep{dube2012improving}. 
 
 
@@ -143,25 +143,26 @@ the Mathematical Programming with Equilibrium Constraints (MPEC) procedure advoc
 by \cite{su2012constrained}. 
 Our setting is similar to \cite{su2012constrained} in which the likelihood function
 function with equilibrium constraints is constructed. 
-MPEC estimator avoids the iterative computations to find the fixed point by evaluating the equilibrium equations as
-constraints.
+MPEC estimator avoids the iterative computations to find the fixed point by evaluating the equilibrium equations as constraints.
 
-Define $\theta=$
+Define $\theta$ as a set of parameters.
 Given the optimal decision rules and reservation utility formula, an MPEC estimator solves the following constrained problem:
-\begin{align*}
-    &\max_{\theta} \sum_{i\in \mathcal{N}} \log L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})\\
-    \text{s.t.}\quad u_{i j} & =\left(\xi_{i j}+\mu_{i j}\right)+\varepsilon_{i j}\\
-    z_{i j}&=\xi_{i j}(\theta)+\mu_{i j}+m\left(c_{i j}\right) \\
-    c_{i j}&=\phi(m)+m \times[\Phi(m)-1] 
-\end{align*}
-where individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$ is derived in Appendix.
+\begin{align}
+    \max_{\theta}& \sum_{i\in \mathcal{N}} \log L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})\nonumber\\
+    \text{s.t.}\quad u_{i j} & =\xi_{i j}+\mu_{i j}+\varepsilon_{i j}\label{eq:mpec_formula}\\
+    z_{i j}&=\xi_{i j}+\mu_{i j}+m\left(c_{i j}\right) \nonumber\\
+    c_{i j}&=\phi(m)+m \times[\Phi(m)-1] \nonumber
+\end{align}
+where individual likelihood $L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})$ is derived in Appendix.
 
-\section{Results}
+For comparison, I Follow \cite{ursu2023sequential} on the setting of the parameters of $\xi_{ij}$ and $c_{ij}$ in \eqref{eq:mpec_formula}. I compare their above first approach with MPEC. Table XX shows that MPEC estimator achieve better performance than the first approach without any ad hoc imposed assumption in a look-up table. However, computational time is longer than the first approach.
 
 \section{Conclusion}
 
+\appendix
+\section{Derivation of individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$}
 
-
+Following \cite{ursu2023sequential}, I construct individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$ as follows.
 
 
 \bibliographystyle{aer}
