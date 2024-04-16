@@ -17,10 +17,10 @@ function liklWeitz_ghk_1(param, data, D, seed)
         uniCons = Int.(N_obs/nalt)
         consid2 = reshape(dat[:, 1], nalt, uniCons)
 
-        # Generate random draws
-        Random.seed!(seed)
-        epsilonDraw = randn(N_obs, D)
-        etaDraw = randn(N_obs, D)
+        # # Generate random draws
+        # Random.seed!(seed)
+        # epsilonDraw = randn(N_obs, D)
+        # etaDraw = randn(N_obs, D)
 
         # chosen consumer id and his likelihood
         consumerData[consumer_num + 1:consumer_num + uniCons, 1] .= consid2[1, :]
@@ -57,22 +57,23 @@ function liklWeitz_ghk_2(param, dat, D, nalt, seed)
     
     #choices
     tran=dat[:,end];
-    tran_ranking = sum(reshape(tran, N_prod, N_cons).*repeat(1:N_prod, N_cons, 1)', dims=1)';
-    searched=dat[:,end-1];
+    tran_ranking = sum(reshape(tran, N_prod, N_cons).* repeat(1:N_prod, 1, N_cons), dims=1)' .|> Int64
+    searched=dat[:,end-1]
     
-    searched_amt = sum(reshape(searched, N_prod, N_cons), dims=1)';
+    searched_amt = sum(reshape(searched, N_prod, N_cons), dims=1)' .|> Int64
     last_searched = zeros(N_prod, N_cons);
     for i = 1:N_cons
-        last_searched[searched_amt[i], i] = 1;
+        last_searched[searched_amt[i], i] = 1.0;
     end
     
     c=exp(param[end])*ones(N_obs);
     X=dat[:,4:3+size(param[1:end-1],1)];
-    xb=sum(X.*param[1:end-1], dims=2);
+    xb=X*param[1:end-1]
     
     ######Calculate m#########
     ###1. look-up table method
-    table=CSV.read("tableZ.csv");
+    #table=CSV.read("tableZ.csv");
+    global table
     m=zeros(N_obs);
     for i=1:N_obs
         lookupvalue=abs.(table[:,2].-c[i]);
@@ -237,6 +238,11 @@ function liklWeitz_ghk_2(param, dat, D, nalt, seed)
     return llk
 end
 
+# Test: evaluate time
+@elapsed begin
+    for i = 1:5
+        liklWeitz_ghk_1(param, data, D, seed)
+    end     
+end
 
 
-cdf.(Normal(),[0.0,1.0])

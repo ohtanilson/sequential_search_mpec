@@ -133,12 +133,12 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
         u0_5 = reshape(u0_4, N_obs, 1)
 
         #selection rule: z>z_next
-        denom_order=exp.(scaling_order*(z[:,d]-zmax)).*has_searched.*searched.*(1.-outside).*(1.-last)
+        denom_order=exp.(scaling_order*(z[:,d] .- zmax)).*has_searched.*searched.*(1 .- outside).*(1 .- last)
 
         #stopping rule: z>u_so_far
-        denom_search=exp.(scaling_search*(z[:,d]-ymax)).*has_searched.*searched.*(1-outside)
-         + exp.(scaling_search*(ymax-z[:,d])).*has_searched.*(1-searched)
-         + exp.(scaling_search*(u0_5-z[:,d])).*(1-has_searched).*(1-outside)
+        denom_search=exp.(scaling_search*(z[:,d] .- ymax)).*has_searched.*searched.*(1 .- outside)
+         + exp.(scaling_search*(ymax .- z[:,d])).*has_searched.*(1 .- searched)
+         + exp.(scaling_search*(u0_5 .- z[:,d])).*(1 .- has_searched).*(1 .- outside)
 
         #choice rule :
         # this is not what the paper says, but it should work
@@ -146,31 +146,59 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
         # here: v_i = u_trand - u_i (∀ i ∈ searched)
         u_ch2=ut[:,d].*tran
         u_ch3=reshape(u_ch2,nalt,N_cons)
-        u_ch4=repeat(sum(u_ch3),nalt,1)
+        u_ch4=repeat(sum(u_ch3, dims=1),nalt,1)
         u_ch5=reshape(u_ch4,N_obs,1)
-        denom_ch=exp(scaling_choice*(u_ch5-ut[:,d])).*(1-tran).*searched
+        denom_ch=exp.(scaling_choice*(u_ch5 .- ut[:,d])).*(1 .- tran).*searched
 
         #1. create denom with all inputs 
-        denom=denom_order+denom_search+denom_ch
+        denom=denom_order .+ denom_search .+ denom_ch
 
         #2. sum at the consumer level
-        denfull2=accumarray(consumer,denom)
-        denfull=denfull2[denfull2.!=0]
+        #denfull2=accumarray(consumer,denom)
+        denfull2 = reshape(denom, nalt,N_cons)
+        denfull2 = sum(denfull2, dims=1)
+        denfull = denfull2  |> vec
+        #denfull=denfull2[denfull2.!=0.0]
 
         #check for numerical errors
-        denfull_t = denfull .> 0 .& denfull .< 2.2205e-16
-        denfull[denfull_t] = 2.2205e-16
+        denfull_t = denfull .> 0.0 .&& denfull .< 2.2205e-16
+        denfull[denfull_t] .= 2.2205e-16
         denfull_t2 = denfull .>  2.2205e+16
-        denfull[denfull_t2] = 2.2205e+16
+        denfull[denfull_t2] .= 2.2205e+16
 
         #3. compute prob=1/(1+denfull)
-        prob[:,d]=1./(1+denfull)
+        prob[:, d] = denfull#1 ./ (1 .+ denfull)
     end
 
-    llk=mean(prob,2)
+    llk=mean(prob,dims =2)
 
     return llk
 end
 
 
+# Test: evaluate time 
+scaling = [-18,-18,-18]
+@elapsed begin 
+    for i = 1:5
+        liklWeitz_kernel_1(param, data, D,scaling, seed)
+    end
+end
+
+sigmoid(x,s) = 1/(1+exp(-x/s))
+plot(-10:0.1:10, sigmoid.(-10:0.1:10,0.1), label="sigmoid function")
+
+param0 = param+ 0.1*randn(length(param))
+@time result = 
+    Optim.optimize(
+        param -> liklWeitz_kernel_1(param, data, D,scaling, seed),
+        param,
+        BFGS(),
+        autodiff=:central#,
+        #optimizer = with_linesearch(BFGS(), Optim.HagerZhang()),
+        #finite_difference_increment=1e-8
+        )
+
+
+# Extract results
+Optim.minimizer(result_kernel)
     
