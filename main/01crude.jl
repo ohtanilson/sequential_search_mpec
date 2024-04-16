@@ -1,8 +1,41 @@
-Random.seed!(seed)
-epsilonDraw = randn(N_obs, D)
-etaDraw = randn(N_obs, D)
+function make_N_obs(data)
+    consumer = data[:, 1]
+    N_cons = length(Set(consumer))
 
-function liklWeitz_crude_1(param, data, D, epsilonDraw, etaDraw)
+    #N_prod = data[:, end - 2]
+    N_prod = data[:, end - 2]
+    Js = unique(N_prod)
+    Num_J = length(Js)
+
+    N_obs = Float64[
+        size(data[N_prod .== Int.(Js[i]), :],1) for i in 1:Num_J
+    ] .|> Int64
+
+    return N_obs
+end
+
+Nobs = make_N_obs(data)
+
+Random.seed!(seed)
+epsilonDraw = [randn(Nobs[i], D) for i in 1:length(Nobs)]
+etaDraw = [randn(Nobs[i], D) for i in 1:length(Nobs)]
+
+struct randomDraws
+    epsilonDraw::Vector{Matrix{Float64}}
+    etaDraw::Vector{Matrix{Float64}}
+end
+
+function randomDraws(data, D, seed)
+    Nobs = N_obs(data)
+    Random.seed!(seed)
+    epsilonDraw = [randn(Nobs[i], D) for i in 1:length(Nobs)]
+    etaDraw = [randn(Nobs[i], D) for i in 1:length(Nobs)]
+    return randomDraws(epsilonDraw, etaDraw)
+end
+
+rd = randomDraws(data, D, seed)
+
+function liklWeitz_crude_1_out(param::Vector{Float64}, data::Matrix{Float64}, D::Int64, epsilonDraw::Vector{Matrix{Float64}}, etaDraw::Vector{Matrix{Float64}})
     consumer = data[:, 1]
     N_cons = length(Set(consumer))
 
@@ -28,7 +61,7 @@ function liklWeitz_crude_1(param, data, D, epsilonDraw, etaDraw)
 
         # chosen consumer id and his likelihood
         consumerData[consumer_num + 1:consumer_num + uniCons, 1] .= consid2[1, :]
-        consumerData[consumer_num + 1:consumer_num + uniCons, 2] .= liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw, etaDraw)
+        consumerData[consumer_num + 1:consumer_num + uniCons, 2] .= liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw[i], etaDraw[i])
         consumer_num += uniCons
     end
 
@@ -51,7 +84,7 @@ function liklWeitz_crude_1(param, data, D, epsilonDraw, etaDraw)
     return loglik
 end
 
-function liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw, etaDraw)
+function liklWeitz_crude_2(param::Vector{Float64}, dat::Matrix{Float64}, D::Int64, nalt::Int64, epsilonDraw::Matrix{Float64}, etaDraw::Matrix{Float64})
     # Data features
     consumer = dat[:, 1]
     N_obs = length(consumer)
@@ -183,3 +216,17 @@ function liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw, etaDraw)
     llk = mean(prob, dims=2);
     return llk
 end
+
+# Test: evaluate time 
+@elapsed begin 
+    for i = 1:10
+        liklWeitz_crude_1_out(param, data, D, epsilonDraw, etaDraw)
+    end
+end
+
+@elapsed begin 
+    for i = 1:10
+        liklWeitz_crude_1(param, data, D, seed)
+    end
+end
+#Why????

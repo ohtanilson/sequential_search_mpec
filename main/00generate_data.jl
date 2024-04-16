@@ -338,6 +338,7 @@ data = simWeitz(N_cons, N_prod, param, seed)
 # data = load("genWeitzDataS$seed.mat")
 # data = data["data"]
 
+
 # Estimation
 # Initial parameter vector
 param0 = zeros(size(param))
@@ -351,7 +352,7 @@ param0 = zeros(size(param))
 # end
 
 # Perform estimation
-@time result = 
+@time result_crude = 
     Optim.optimize(
         param -> liklWeitz_crude_1(param, data, D, seed),
         param0,
@@ -363,7 +364,7 @@ param0 = zeros(size(param))
 
 
 # Extract results
-be = Optim.minimizer(result)
+be = Optim.minimizer(result_crude);param
 val = Optim.minimum(result)
 exitflag = Optim.converged(result)
 
