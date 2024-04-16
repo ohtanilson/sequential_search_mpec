@@ -78,7 +78,7 @@ function liklWeitz_ghk_2(param, dat, D, nalt, seed)
     for i=1:N_obs
         lookupvalue=abs.(table[:,2].-c[i]);
         if (table[1,2]>=c[i] && c[i]>=table[end,2])
-            _,index_m=argmin(lookupvalue);
+            index_m=argmin(lookupvalue);
             m[i]=table[index_m,1];
         elseif table[1,2]<c[i]
             m[i]=-c[i];
@@ -100,7 +100,7 @@ function liklWeitz_ghk_2(param, dat, D, nalt, seed)
     #     m[i] = contractionZ(m[i], c[i]);
     # end
     
-    rng(seed);
+    Random.seed!(seed)
     etaDraw=randn(N_cons,D);
     xb_con_prod = reshape(xb, N_prod, N_cons);
     mc = reshape(m, N_prod, N_cons);
