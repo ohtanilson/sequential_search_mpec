@@ -41,7 +41,7 @@ end
 # process. For Monte Carlo experiments with a different the discount factor,
 # change the value for beta below.
 
-using CSV
+using CSV   
 using Random
 using Plots
 using Distributions
@@ -125,7 +125,12 @@ function RustBusMLETableXSolveEV(param::rust_struct)
     M = param.M;
     # Define discount factor. We fix beta since it can't be identified
     beta = param.beta;   # discount factor
-    model = JuMP.Model(with_optimizer(Ipopt.Optimizer, max_cpu_time=300.0))
+    #model = JuMP.Model(with_optimizer(Ipopt.Optimizer, max_cpu_time=300.0))
+    #koiso: with_optimizer is no longer supported
+    #koiso: https://discourse.julialang.org/t/i-cannot-use-the-commands-with-optimizer-and-getobjectivevalue-with-jump-gurobi/83854/4
+    model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>300.0))
+
+
     # Data: (xt, dt)
     ###################
     # dt, xt are given in MC_dt, MC_xt
@@ -236,12 +241,14 @@ function EV_MPEC_check(param::rust_struct)
     ####################
     # EV from Conlon's data
     ####################
-    EV_conlon = CSV.read("EV.sol", datarow=1)
-    EV_conlon = EV_conlon[:,1]
-    fig = Plots.plot!(EV_conlon,label = "EV_conlon's_file",color ="red", line = (:dashdot))
+    # EV_conlon = CSV.read("EV.sol", datarow=1)
+    # EV_conlon = EV_conlon[:,1]
+    # fig = Plots.plot!(EV_conlon,label = "EV_conlon's_file",color ="red", line = (:dashdot))
     @show fig
     savefig(fig,"EV_MPEC_check")
 end
+#EV_MPEC_check(param::rust_struct)
+
 #=
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Simulate Data for 250 date sets -- (state, decision) = (xt,dt)
@@ -280,14 +287,16 @@ function simdata(param::rust_struct, EV::Array{Float64,1})
         xt = ones(Int64, nT, nBus);
         dx = zeros(nT, nBus);
         dt = zeros(nT, nBus);
-        #cumTransProb = cumsum(thetaProbs);
-        cumTransProb = cumsum(thetaProbs, dims=2);
+        #cumTransProb = cumsum(thetaProbs)
+        cumTransProb = cumsum(thetaProbs,dims = 2);
         for t = 1:nT
             #dt(t,:) = (Rd(t,:) >= P0(xt(t,:))');
             dt[t,:] = (Rd[t,:] .>= P0[xt[t,:]]);
             for i = 1:nBus
                 #dx(t,i) = find(Rx(t,i) < cumTransProb,1);
-                dx[t,i] = findfirst((Rx[t,i] .< cumTransProb)[1,:])
+                #koiso: got error
+                #dx[t,i] = findfirst((Rx[t,i] .< cumTransProb)[1,:])
+                dx[t,i] = findfirst(==(1),(Rx[t,i] .< cumTransProb)[1,:])
                 if t < nT
                     if dt[t,i] == 1
                        xt[t+1,i] = 1 + dx[t,i]-1;
@@ -468,7 +477,10 @@ function RustBusMLETableX(param::rust_struct,
     M = param.M;
     # Define discount factor. We fix beta since it can't be identified
     beta = param.beta;   # discount factor
-    model = JuMP.Model(with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0))
+    #model = JuMP.Model(with_optimizer(Ipopt.Optimizer, max_cpu_time=60.0))
+    #koiso: with_optimizer is no longer supported
+    #koiso: https://discourse.julialang.org/t/i-cannot-use-the-commands-with-optimizer-and-getobjectivevalue-with-jump-gurobi/83854/4
+    model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>60.0))
     # Data: (xt, dt)
     #@variable(model, dt[t=1:nT, b =1:nBus]); # decision of bus b at time t
     #@variable(model, xt[t=1:nT, b =1:nBus]); # mileage (state) of bus b at time t
@@ -651,7 +663,7 @@ function plot_MLE_MPEC(;grid_ind)
     return temp_plot
 end
 #=
-@time temp_plot = plot_MLE_MPEC(grid_ind=15)
+@time temp_plot = plot_MLE_MPEC(grid_ind=2)
 @show temp_plot
 savefig(temp_plot,"full_MLE_obj_MPEC")
 open("temp_plot_MPEC.txt", "w") do f
@@ -784,7 +796,7 @@ indices = repeat((1:param.N),1,param.M).+repeat((1:param.M)',param.N,1).-1;
 
 function BellContract_SA(param::rust_struct, thetaCost::Float64, TransProb::Array{Float64,2}, RC::Float64, tol_inner::Float64;inner_tol_max=500)
     #=
-    % This m-file solves the integrated Bellman equation using constraction
+    % This m-file solves the integrated Bellman equation using contraction
     % mapping iteration in the NFXP algorithm.
     %
     % source: Su and Judd (2011), Constrained Optimization Approaches to
