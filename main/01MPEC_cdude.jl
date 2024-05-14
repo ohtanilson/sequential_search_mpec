@@ -1,3 +1,6 @@
+using LinearAlgebra
+using Kronecker
+
 function liklWeitz_crude_1(param, data, D, seed)
     consumer = data[:, 1]
     N_cons = length(Set(consumer))
@@ -49,74 +52,106 @@ end
 
 
 
-function Crude_MPEC(data, D, seed)
+#function Crude_MPEC(data, D, seed)
 
     model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>60.0))
-    global param # initial value list
+    #global param # initial value list
+    @variable(model, param[i = 1:4]) #5
+    @variable(model, L_i_[i = 1:N_cons])
+    #@variable(model, logL)
 
+    # Data features
     consumer = data[:, 1]
+    N_obs = length(consumer)
     N_cons = length(Set(consumer))
 
-    #N_prod = data[:, end - 2]
-    N_prod = data[:, end - 2]
-    Js = unique(N_prod)
-    Num_J = length(Js)
-    consumerData = zeros(N_cons, 2)
-    consumer_num = 0
+    # Choices
+    tran = data[:, end]
+    # searched = data[:, end - 1]
+    # has_searched = data[:, end - 3]
+    # last = data[:, end - 4]
+    
+    # Parameters
+    outside = data[:, 3]
+    #c = exp(param[end]) * ones(N_obs)
+    X = data[:, 4:7]
+    ut = @expression(model, ( (X * param) .+ etaDraw) .* (1 .- outside) .+ epsilonDraw)
 
     # Construct likelihood for consumers with the same number of searches
-    for i = 1:Num_J
-        nalt = Int.(Js[i])
-        dat = data[N_prod .== nalt, :]
-        N_obs = size(dat, 1)
-        uniCons = Int.(N_obs/nalt)
-        consid2 = reshape(dat[:, 1], nalt, uniCons)
+    # for i = 1:Num_J
+    #     nalt = Int.(Js[i])
+    #     dat = data[N_prod .== nalt, :]
+    #     N_obs = size(dat, 1)
+    #     uniCons = Int.(N_obs/nalt)
+    #     consid2 = reshape(dat[:, 1], nalt, uniCons)
 
-        # Generate random draws
-        Random.seed!(seed)
-        epsilonDraw = randn(N_obs, D)
-        etaDraw = randn(N_obs, D)
+    #     # Generate random draws
+    #     Random.seed!(seed)
+    #     epsilonDraw = randn(N_obs, D)
+    #     etaDraw = randn(N_obs, D)
 
-        # chosen consumer id and his likelihood
-        consumerData[consumer_num + 1:consumer_num + uniCons, 1] .= consid2[1, :]
-        consumerData[consumer_num + 1:consumer_num + uniCons, 2] .= liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw, etaDraw)
-        consumer_num += uniCons
-    end
+    #     # chosen consumer id and his likelihood
+    #     consumerData[consumer_num + 1:consumer_num + uniCons, 1] .= consid2[1, :]
+    #     consumerData[consumer_num + 1:consumer_num + uniCons, 2] .= liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw, etaDraw)
+    #     consumer_num += uniCons
+    # end
 
     # Sum over consumers
     # To guarantee llk is not zero within log
-    llk = -sum(log.(1e-10 .+ consumerData[:, 2]))
+    # llk = -sum(log.(1e-10 .+ consumerData[:, 2]))
 
-    # Check for errors or save output
-    if isnan(llk) || llk == Inf || llk == -Inf || !isreal(llk)
-        loglik = 1e+300
-    else
-        loglik = llk
-        println(param)
-        println(loglik)
-        paramLL = [param; loglik]
-        # Save preliminary output
-        #CSV.write("betaWeitz_crude_D$D""S$seed.csv", DataFrame(paramLL), writeheader=false)
+    # # Check for errors or save output
+    # if isnan(llk) || llk == Inf || llk == -Inf || !isreal(llk)
+    #     loglik = 1e+300
+    # else
+    #     loglik = llk
+    #     println(param)
+    #     println(loglik)
+    #     paramLL = [param; loglik]
+    #     # Save preliminary output
+    #     #CSV.write("betaWeitz_crude_D$D""S$seed.csv", DataFrame(paramLL), writeheader=false)
+    # end
+
+    # function indicator(v)
+    #     return v >= 0 ? 1 : 0
+    # end
+
+    # register(model, :indicator, autodiff = true)
+
+    #choice
+    u_y = @expression(model,Diagonal(ones(1000)) ⊗ ones(1,5) * (ut.* tran))
+    for i = 1:N_cons
+        for d = 1:D
+            u_max[i, d] = @expression(model, maximum(ut[(5*(i-1) + 1):5*i, d]))
+        end
     end
-
-    function indicator(v)
-        return v > 0 ? 1 : 0
+    for i = 1:N_cons
+        for d = 1:D
+            choice[i, d] = @NLexpression(model, u_y[i,d] - u_max[i,d] >= 0)
+        end
     end
+     #[i = 1:N_cons,  d = 1:D]
+    #@NLexpression(model,choice[i = 1:N_cons, d = 1:D], (v4[i,d] >= 0))
 
-    register(model, :indicator, autodiff = true)
+    # Combine all inputs
     #L_i_d: (N x D) matrix
-    @NLexpression(model, L_i_d[i = 1:N_cons, d = 1:Num_J], prod(v_i_d))
+    #@expression(model, L_i_d, order .* search_1 .* search_2 .* search_3 .* choice)
+    #@expression(model, L_i_d[i = 1:N_cons, d = 1:D], order[i,d] .* search_1[i,d] .* search_2[i,d] .* search_3[i,d] .* choice[i,d])
 
-    @NLexpression(model, L_i[i = 1:N_cons], sum(L_i_d[i,d] for d=1:Num_J))
+    #@expression(model, L_i[i = 1:N_cons], sum(L_i_d[i,d] for d=1:D))
+    for i = 1:N_cons
+        #@NLconstraint(model, L_i_[i] == sum(choice[i,d] for d=1:D) + 1e-15)
+        
+    end
+    @NLexpression(model,L_i_[i = 1:N_cons], sum(choice[i,d] for d=1:D) + 1e-15)
 
-    @NLexpression(model, logL, sum(log(L_i[i]) for i=1:N_cons))
+JuMP.@NLobjective(model, Max, sum(log(L_i_[i]) for i = 1:N_cons))
 
-    JuMP.@NLobjective(model, Max, logL)
+@time JuMP.optimize!(model)
 
-    @time JuMP.optimize!(model)
-
-    return JuMP.value.(thetaCost),JuMP.value.(RC), JuMP.value.(EV), JuMP.value.(thetaProbs),JuMP.objective_value(model)
-end
+JuMP.value.(param),JuMP.objective_value(model)
+    #return 
+#end
 
 
 
@@ -283,7 +318,7 @@ function liklWeitz_crude_2_(param1::Float64,param2::Float64,param3::Float64,para
         choice .= choice .> 0
     
         # Combine all inputs
-        chain_mult = order .* search_1 .* search_2 .* search_2 .* search_3 .* choice;
+        chain_mult = order .* search_1 .* search_2 .* search_3 .* choice;
     
         # Sum at the consumer level
         #final_result = accumarray(consumer, chain_mult, [N_cons 1], @prod);
