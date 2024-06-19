@@ -6,14 +6,14 @@ using Distributions
 
 # std_normal = Normal(0.0, 1.0)
 
-scaling = [-10,-50,-1000]
+scaling = [-18,-4,-7]
 
-#function Kernel_MPEC(data, D, seed)
+function Kernel_MPEC(maxtime)
 
-    model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>100.0))
+    model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>maxtime))
     #global param # initial value list
     @variable(model, params[i = 1:4],start = 1.0) 
-    @variable(model, c >= 0.0) 
+    @variable(model, c >= 0.0,start = 0.0) 
     @variable(model, m) #scaler
 
     # Data features
@@ -30,8 +30,10 @@ scaling = [-10,-50,-1000]
     #@NLexpression(model,c, exp(params[end]) )
     X = dat[:, 4:7]
 
-    ut = @expression(model, ( (X * params ) .+ etaDraw) .* (1 .- outside) .+ epsilonDraw)
+    eut = @expression(model, ((X * params ).+ etaDraw) .* (1 .- outside))
 
+    ut = @expression(model,eut .+ epsilonDraw)
+    z = @expression(model, m .+ eut)
     # global  table
     # @NLconstraint(model, 
     #     ifelse(
@@ -44,12 +46,9 @@ scaling = [-10,-50,-1000]
     register(model, :norm_pdf, 1, norm_pdf; autodiff = true)
     @NLconstraint(model, c == norm_pdf(m) + m *(norm_cdf(m) - 1))
 
-    z = @expression(model, m .+ eut)
-
     ut_unsearched = zeros(N_obs, D)
     searched2 = repeat(searched, 1, D)
     ut_unsearched[searched2 .== 0] .= -Inf
-
     ut_searched = @expression(model, ut .+ ut_unsearched)
     
     # Selection rule: z > z_next
@@ -81,20 +80,27 @@ scaling = [-10,-50,-1000]
     # Choice rule
     #u_max = max_{j ∈ S\ y} u_j, where y is the chosen alternative
     #by defining u_max in this way, we can avoid adding small number to u_y - u_max
-    u_y = @expression(model,Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran))
+    #u_y = @expression(model,Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran))
 
     ut_searched_except_y_inf = zeros(N_obs, D)
     ut_searched_except_y_inf[repeat(tran, 1, D)  .== 1] .= -Inf
     ut_searched_except_y  = @expression(model, ut_searched .+ ut_searched_except_y_inf)
 
-    # u_max = Array{AffExpr,2}(undef,N_cons, D)
+    ut_tran_inf = zeros(N_obs, D)
+    ut_tran_inf[repeat(tran, 1, D)  .== 0] .= -Inf
+    ut_tran = @expression(model, ut .+ ut_tran_inf)
+
+    # u_max = Array{NonlinearExpr,2}(undef,N_cons, D)
+    # u_y = Array{NonlinearExpr,2}(undef,N_cons, D)
     # for i = 1:N_cons
     #     for d = 1:D
     #         u_max[i, d] = @expression(model, maximum(ut[(5*(i-1) + 1):5*i, d]))
+    #         u_y[i, d] = @expression(model, sum( (ut.* tran)[(5*(i-1) + 1):5*i, d])) 
     #     end
     # end
     @expression(model,u_max_[i= 1:N_cons, d= 1:D], maximum(ut_searched_except_y[(5*(i-1) + 1):5*i, d]))
-    v4 = @expression(model, (u_y - u_max_) ⊗ ones(nalt) )
+    @expression(model,u_y_[i= 1:N_cons, d= 1:D], maximum( ut_tran[(5*(i-1) + 1):5*i, d]))
+    v4 = @expression(model, (u_y_ - u_max_) ⊗ ones(nalt) )
 
     #denom
     # @NLexpression(model,denom[i = 1:N_obs, d = 1:D] , 
@@ -103,10 +109,12 @@ scaling = [-10,-50,-1000]
     #     exp(scaling[2]* v3[i,d]) * (1 - searched[i]) * (1 - outside[i])+
     #     exp( scaling[3] *v4[i,d]) * tran[i]
     #     )
-    denom = @expression(model, exp.(scaling[1]* v1).*(1 .- outside) .* searched .+
+    denom = @expression(model, 
+     exp.(scaling[1]* v1).*(1 .- outside) .* searched .+
         exp.(scaling[2]* v2).*(1 .- outside) .* searched .+
         exp.(scaling[2]* v3).*(1 .- searched) .*(1 .- outside) .+
-        exp.( scaling[3] *v4) .* tran)
+        exp.(scaling[3] *v4) .* tran
+        )
     #@NLexpression(model,denom_order[i = 1:N_obs, d = 1:D] , exp(scaling[1]* v1[i,d]) * searched[i,d] * (1 - outside[i,d])) #0 for outside option and searched = 0
     
     # denom_search1 = 
@@ -121,23 +129,11 @@ scaling = [-10,-50,-1000]
     #@NLexpression(model,denom_order_search_sum[i= 1:N_cons, d= 1:D], sum(denom_order_search[(5*(i-1) + 1):5*i, d], for i = 1:N_cons))
 
     #denom =  @expression(model,denom_order_search_sum .+ denom_ch) #denom_order_search .+ denom_ch
-    @NLexpression(model,prob[i = 1:N_obs, d = 1:D],1 / (1 + denom[i,d]))
-    #prob = @expression(model, 1 ./ (1 .+ denom))
-    
-    
-
-   
-    
+    #@NLexpression(model,prob[i = 1:N_obs, d = 1:D],1 / (1 + denom[i,d]))
+    prob = @expression(model, 1 ./ (1 .+ denom))
     
 
-    
-    
-    # for i = 1:N_cons
-    #     for d = 1:D
-    #         v4[i, d] = @expression(model, u_y[i,d] - u_max[i,d])
-    #     end
-    # end
-    
+
     
 
 
@@ -158,16 +154,21 @@ scaling = [-10,-50,-1000]
     #     #@NLconstraint(model, L_i_[i] == sum(choice[i,d] for d=1:D) + 1e-15)
         
     # end
-    @NLexpression(model,L_i[i = 1:N_cons], sum(prob[i,d] for d=1:D) + 1e-15)
+    #@NLexpression(model,L_i[i = 1:N_cons], sum(prob[i,d] for d=1:D) + 1e-10)
+    L_i = @expression(model, prob * ones(D)./D .+ 1e-10)
 
-JuMP.@NLobjective(model, Max, sum(log(L_i[i]) for i = 1:N_cons))
+    JuMP.@NLobjective(model, Max, sum(log(L_i[i]) for i = 1:N_cons))
 
-@time JuMP.optimize!(model)
+    @time JuMP.optimize!(model)
 
-JuMP.value.(params),JuMP.objective_value(model)
-    #return 
-#end
-
+    
+    return JuMP.value.(params),JuMP.value.(c),JuMP.objective_value(model)
+end
+Kernel_MPEC(maxtime)
+[JuMP.value.(params);exp(JuMP.value.(c))]
+liklWeitz_kernel_2_b([[1.0033809920108825, 0.8985401374613001, 0.5614162948784083, 0.5490977643171332];0.4569630773419061], dat, D, nalt, epsilonDraw, etaDraw,scaling)
+JuMP.objective_value(model)
+param[1:end-1],exp(param[end]),liklWeitz_kernel_2_b(param, dat, D, nalt, epsilonDraw, etaDraw,scaling)
 
 
 
@@ -291,14 +292,14 @@ function liklWeitz_kernel_2_b(param, dat, D, nalt, epsilonDraw, etaDraw,scaling)
     u_max = reshape(u_max, N_cons, D)
     
     #choice = (u_y - u_max .>= 0)
-    denom_ch = exp.(scaling[3].*(u_y - u_max) ) #(not anymore: if u_y == u_max, choice = 0.5 even with scaling = 0, So add 1e-5)
+    denom_ch = exp.(scaling[3].*(u_y - u_max) ⊗ ones(nalt)).* tran #(not anymore: if u_y == u_max, choice = 0.5 even with scaling = 0, So add 1e-5)
     
     # Combine all inputs
-    denom_order_search_reshape = reshape(denom_order .+ denom_search1 .+ denom_search2 , nalt, N_cons, D)#reshape(denom_order .+ denom_search1 .+ denom_search2, nalt, N_cons, D)
-    denom_order_search = sum(denom_order_search_reshape, dims=1) #prod(search_2_reshape, dims=1)
-    denom_order_search = reshape(denom_order_search, N_cons, D)
+    denom = reshape(denom_order .+ denom_search1 .+ denom_search2 .+ denom_ch , nalt, N_cons, D)#reshape(denom_order .+ denom_search1 .+ denom_search2, nalt, N_cons, D)
+    denom = sum(denom, dims=1) #prod(search_2_reshape, dims=1)
+    denom = reshape(denom, N_cons, D)
 
-    denom =  denom_order_search .+ denom_ch #denom_order_search .+ denom_ch
+    #denom =  denom_order_search .+ denom_ch #denom_order_search .+ denom_ch
     
     denfull_t = denom .> 0.0 .&& denom .< 2.2205e-16
     denom[denfull_t] .= 2.2205e-16
