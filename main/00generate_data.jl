@@ -20,7 +20,7 @@ function simWeitz(N_cons, N_prod, param, seed)
 
     # Number of observations
     N_obs = N_cons * N_prod
-    consumer = repeat(1:N_cons, inner=N_prod)
+    consumer = repeat(1:N_cons, inner = N_prod)
     N_prod_cons = repeat(1:N_prod, outer=N_cons)
 
     # Product id
@@ -86,7 +86,7 @@ function simWeitz(N_cons, N_prod, param, seed)
     searched = outside
 
     # Search decision: 2. Search if z greater than all ut searched so far (because z's are ordered)
-    for i = 1:(N_cons - 1)
+    for i = 1:N_cons
         # For every product, except outside option
         for j = index_first[i] + 1: index_last[i]
             # Max ut so far
@@ -105,9 +105,9 @@ function simWeitz(N_cons, N_prod, param, seed)
     tran = zeros(N_obs)
     searched_ut = data[:, end - 1] .* searched
 
-    for i = 1:(N_cons - 1)
+    for i = 1:N_cons
         A = searched_ut[index_first[i]:index_last[i]]
-        A[A .== 0] .= -100000
+        A[A .== 0] .= -Inf # set non-searched to very low value
         indexch = argmax(A)
         tran[index_first[i] + indexch - 1] = 1
     end
@@ -115,8 +115,9 @@ function simWeitz(N_cons, N_prod, param, seed)
     # Export data
     length_prod = repeat([N_prod], N_obs)
     searched_mat = reshape(searched, N_prod, N_cons)
-    has_searched = searched_mat[2, :]
-    has_searched = repeat(has_searched, N_prod)
+    has_searched = searched_mat[2, :] # has_searched = 1 if searched at least one product
+    #has_searched = repeat(has_searched,N_prod)
+    has_searched = repeat(has_searched,inner= N_prod)#modified (5th June)
     last = [zeros(N_prod - 1); 1]
     last = repeat(last, N_cons)
     #output = hcat(data[:, 1:end - 2], last, has_searched, length_prod, searched, tran)
@@ -262,7 +263,7 @@ function liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw, etaDraw)
                 supp_var .* outside .+ 
                 supp_var .* (1 .- has_searched) .+
                 supp_var .* (1 .- searched)
-        order .= order .> 0
+        order .= order .> 0;
     
         # Stopping rule: z > u_so_far
         search_1 = (z[:, d] .- ymax) .* has_searched .* searched .* (1 .- outside) .+

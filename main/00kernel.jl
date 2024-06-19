@@ -136,9 +136,9 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
         denom_order=exp.(scaling_order*(z[:,d] .- zmax)).*has_searched.*searched.*(1 .- outside).*(1 .- last)
 
         #stopping rule: z>u_so_far
-        denom_search=exp.(scaling_search*(z[:,d] .- ymax)).*has_searched.*searched.*(1 .- outside)
-         + exp.(scaling_search*(ymax .- z[:,d])).*has_searched.*(1 .- searched)
-         + exp.(scaling_search*(u0_5 .- z[:,d])).*(1 .- has_searched).*(1 .- outside)
+        denom_search1 = exp.(scaling_search*(z[:,d] .- ymax)).*has_searched.*searched.*(1 .- outside)
+        denom_search2 = exp.(scaling_search*(ymax .- z[:,d])).*has_searched.*(1 .- searched)
+         .+ exp.(scaling_search*(u0_5 .- z[:,d])).*(1 .- has_searched).*(1 .- outside)
 
         #choice rule :
         # this is not what the paper says, but it should work
@@ -151,7 +151,7 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
         denom_ch=exp.(scaling_choice*(u_ch5 .- ut[:,d])).*(1 .- tran).*searched
 
         #1. create denom with all inputs 
-        denom=denom_order .+ denom_search .+ denom_ch
+        denom = denom_order .+ denom_search1 .+ denom_search2 .+ denom_ch#denom_order .+ denom_search .+ denom_ch
 
         #2. sum at the consumer level
         #denfull2=accumarray(consumer,denom)
@@ -167,7 +167,7 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
         denfull[denfull_t2] .= 2.2205e+16
 
         #3. compute prob=1/(1+denfull)
-        prob[:, d] = denfull#1 ./ (1 .+ denfull)
+        prob[:, d] = 1 ./ (1 .+ denfull)
     end
 
     llk=mean(prob,dims =2)
@@ -191,7 +191,7 @@ param0 = param+ 0.1*randn(length(param))
 @time result = 
     Optim.optimize(
         param -> liklWeitz_kernel_1(param, data, D,scaling, seed),
-        param,
+        param0,
         BFGS(),
         autodiff=:central#,
         #optimizer = with_linesearch(BFGS(), Optim.HagerZhang()),
