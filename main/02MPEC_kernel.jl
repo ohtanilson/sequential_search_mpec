@@ -175,9 +175,11 @@ function Kernel_MPEC(maxtime::Float64,max_iter::Int64)
     
     return JuMP.value.(params),JuMP.value.(c),JuMP.objective_value(model)
 end
-maxtime = 10.0
-max_iter = 1
-@time params_,c_,objval_MPEC = Kernel_MPEC(maxtime)
+maxtime = 10.0 
+max_iter = 1 
+#not enough: maxtime = 3600.0, max_iter = 6000
+#maxtime was binding first, and max_iter was around 2500(?) at end 
+@time params_,c_,objval_MPEC = Kernel_MPEC(maxtime,max_iter)
 [params_;log(c_)]
 param
 
