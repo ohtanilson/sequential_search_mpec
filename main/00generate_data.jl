@@ -1,5 +1,6 @@
-using Optim, Random, Distributions, CSV, DataFrames, DelimitedFiles, Statistics
-using JLD2, MAT
+using Distributions
+using Random, Distributions, CSV, DataFrames, DelimitedFiles, Statistics
+using Optim, JLD2, MAT
 
 # construct look-up table
 m = -3.55:0.001:4
