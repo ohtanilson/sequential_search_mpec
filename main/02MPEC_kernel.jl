@@ -180,8 +180,4 @@ max_iter = 1
 @time params_,c_,objval_MPEC = Kernel_MPEC(maxtime)
 [params_;c_]
 param
-liklWeitz_kernel_2_b([[1.0033809920108825, 0.8985401374613001, 0.5614162948784083, 0.5490977643171332];0.4569630773419061], dat, D, nalt, epsilonDraw, etaDraw,scaling)
-JuMP.objective_value(model)
-param[1:end-1],exp(param[end]),liklWeitz_kernel_2_b(param, dat, D, nalt, epsilonDraw, etaDraw,scaling)
-
 
