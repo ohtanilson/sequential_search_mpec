@@ -1,176 +1,7 @@
+#generate data from 01generate_data.jl
 using LinearAlgebra
 using Kronecker
-using JuMP
-using Ipopt
 using Distributions
-
-# std_normal = Normal(0.0, 1.0)
-
-scaling = [-18,-4,-7]
-
-function Kernel_MPEC(maxtime)
-
-    model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>maxtime))
-    #global param # initial value list
-    @variable(model, params[i = 1:4],start = 1.0) 
-    @variable(model, c >= 0.0,start = 0.0) 
-    @variable(model, m) #scaler
-
-    # Data features
-    consumer = dat[:, 1]
-    N_obs = length(consumer)
-    N_cons = length(Set(consumer))
-
-    # Choices
-    tran = dat[:, end]
-    searched = dat[:, end - 1]
-
-    # Parameters
-    outside = dat[:, 3]
-    #@NLexpression(model,c, exp(params[end]) )
-    X = dat[:, 4:7]
-
-    eut = @expression(model, ((X * params ).+ etaDraw) .* (1 .- outside))
-
-    ut = @expression(model,eut .+ epsilonDraw)
-    z = @expression(model, m .+ eut)
-    # global  table
-    # @NLconstraint(model, 
-    #     ifelse(
-    #         table[1, 2] >= c && c >= table[end, 2], m - table[argmin(abs.(table[:, 2] .- c)), 1],
-    #         ifelse(table[1, 2] < c, m + c, m - 4.001)
-    #         ) == 0)
-    norm_cdf(x) = cdf(Normal(), x)
-    norm_pdf(x) = pdf(Normal(), x)
-    register(model, :norm_cdf, 1, norm_cdf; autodiff = true)
-    register(model, :norm_pdf, 1, norm_pdf; autodiff = true)
-    @NLconstraint(model, c == norm_pdf(m) + m *(norm_cdf(m) - 1))
-
-    ut_unsearched = zeros(N_obs, D)
-    searched2 = repeat(searched, 1, D)
-    ut_unsearched[searched2 .== 0] .= -Inf
-    ut_searched = @expression(model, ut .+ ut_unsearched)
-    
-    # Selection rule: z > z_next
-    z_max = Array{NonlinearExpr,2}(undef,N_obs, D)
-    for i = 1:N_cons
-        k = nalt*(i-1) #last alternative for the previous consumer
-        for j in 0:(nalt-1) #not for outside option
-            for d = 1:D
-                z_max[k + nalt-j,d] = @expression(model,maximum(z[(k + nalt-j):(k + nalt),d]))
-            end
-        end
-    end   
-    v1 = @expression(model, z - z_max)
-    
-    # # Stopping rule: z > u_so_far
-    u_so_far = Array{NonlinearExpr,2}(undef,N_obs, D)
-    for i = 1:N_cons
-        k = nalt*(i-1) + 1 #first alternative
-        u_so_far[k,:] = @expression(model,ut_searched[k,:])
-        for j in 1:(nalt-1)
-            for d = 1:D
-                u_so_far[k + j, d] = @expression(model,maximum(ut_searched[k:(k + j - 1), d]))
-            end
-        end
-    end
-    v2 = @expression(model, z .- u_so_far)
-    v3 = @expression(model, u_so_far .- z)
-
-    # Choice rule
-    #u_max = max_{j ∈ S\ y} u_j, where y is the chosen alternative
-    #by defining u_max in this way, we can avoid adding small number to u_y - u_max
-    #u_y = @expression(model,Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran))
-
-    ut_searched_except_y_inf = zeros(N_obs, D)
-    ut_searched_except_y_inf[repeat(tran, 1, D)  .== 1] .= -Inf
-    ut_searched_except_y  = @expression(model, ut_searched .+ ut_searched_except_y_inf)
-
-    ut_tran_inf = zeros(N_obs, D)
-    ut_tran_inf[repeat(tran, 1, D)  .== 0] .= -Inf
-    ut_tran = @expression(model, ut .+ ut_tran_inf)
-
-    # u_max = Array{NonlinearExpr,2}(undef,N_cons, D)
-    # u_y = Array{NonlinearExpr,2}(undef,N_cons, D)
-    # for i = 1:N_cons
-    #     for d = 1:D
-    #         u_max[i, d] = @expression(model, maximum(ut[(5*(i-1) + 1):5*i, d]))
-    #         u_y[i, d] = @expression(model, sum( (ut.* tran)[(5*(i-1) + 1):5*i, d])) 
-    #     end
-    # end
-    @expression(model,u_max_[i= 1:N_cons, d= 1:D], maximum(ut_searched_except_y[(5*(i-1) + 1):5*i, d]))
-    @expression(model,u_y_[i= 1:N_cons, d= 1:D], maximum( ut_tran[(5*(i-1) + 1):5*i, d]))
-    v4 = @expression(model, (u_y_ - u_max_) ⊗ ones(nalt) )
-
-    #denom
-    # @NLexpression(model,denom[i = 1:N_obs, d = 1:D] , 
-    #     exp(scaling[1]* v1[i,d]) * searched[i] * (1 - outside[i]) +
-    #     exp(scaling[2]* v2[i,d]) * searched[i] * (1 - outside[i]) +
-    #     exp(scaling[2]* v3[i,d]) * (1 - searched[i]) * (1 - outside[i])+
-    #     exp( scaling[3] *v4[i,d]) * tran[i]
-    #     )
-    denom = @expression(model, 
-     exp.(scaling[1]* v1).*(1 .- outside) .* searched .+
-        exp.(scaling[2]* v2).*(1 .- outside) .* searched .+
-        exp.(scaling[2]* v3).*(1 .- searched) .*(1 .- outside) .+
-        exp.(scaling[3] *v4) .* tran
-        )
-    #@NLexpression(model,denom_order[i = 1:N_obs, d = 1:D] , exp(scaling[1]* v1[i,d]) * searched[i,d] * (1 - outside[i,d])) #0 for outside option and searched = 0
-    
-    # denom_search1 = 
-    #     #search until
-    #     @expression(model, exp.(scaling[2]*v2).*(1 .- outside) .* searched )
-    #     #not search from (search = 1 if outside = 1)
-    # denom_search2 = @expression(model, exp.(scaling[2]*v3).*(1 .- searched) )#0 for outside option
-    #@NLexpression(model,denom_ch[i = 1:N_cons, d = 1:D] , exp( scaling[3] *v4[i,d] ) )#(not anymore: if u_y == u_max, choice = 0.5 even with scaling = 0, So add 1e-5)
-    
-    # Combine all inputs
-    #denom_order_search = @expression(model,denom_order .+ denom_search1 .+ denom_search2)
-    #@NLexpression(model,denom_order_search_sum[i= 1:N_cons, d= 1:D], sum(denom_order_search[(5*(i-1) + 1):5*i, d], for i = 1:N_cons))
-
-    #denom =  @expression(model,denom_order_search_sum .+ denom_ch) #denom_order_search .+ denom_ch
-    #@NLexpression(model,prob[i = 1:N_obs, d = 1:D],1 / (1 + denom[i,d]))
-    prob = @expression(model, 1 ./ (1 .+ denom))
-    
-
-
-    
-
-
-    #choice = (u_y - u_max .>= 0)
-    #@NLexpression(model,choice[i = 1:N_cons, d = 1:D] ,1 / (1 + exp( scaling[1] *v4[i,d] )) )
-
-
-     #[i = 1:N_cons,  d = 1:D]
-    #@NLexpression(model,choice[i = 1:N_cons, d = 1:D], (v4[i,d] >= 0))
-
-    # Combine all inputs
-    #L_i_d: (N x D) matrix
-    #@expression(model, L_i_d, order .* search_1 .* search_2 .* search_3 .* choice)
-    #@expression(model, L_i_d[i = 1:N_cons, d = 1:D], order[i,d] .* search_1[i,d] .* search_2[i,d] .* search_3[i,d] .* choice[i,d])
-
-    #@expression(model, L_i[i = 1:N_cons], sum(L_i_d[i,d] for d=1:D))
-    # for i = 1:N_cons
-    #     #@NLconstraint(model, L_i_[i] == sum(choice[i,d] for d=1:D) + 1e-15)
-        
-    # end
-    #@NLexpression(model,L_i[i = 1:N_cons], sum(prob[i,d] for d=1:D) + 1e-10)
-    L_i = @expression(model, prob * ones(D)./D .+ 1e-10)
-
-    JuMP.@NLobjective(model, Max, sum(log(L_i[i]) for i = 1:N_cons))
-
-    @time JuMP.optimize!(model)
-
-    
-    return JuMP.value.(params),JuMP.value.(c),JuMP.objective_value(model)
-end
-Kernel_MPEC(maxtime)
-[JuMP.value.(params);exp(JuMP.value.(c))]
-liklWeitz_kernel_2_b([[1.0033809920108825, 0.8985401374613001, 0.5614162948784083, 0.5490977643171332];0.4569630773419061], dat, D, nalt, epsilonDraw, etaDraw,scaling)
-JuMP.objective_value(model)
-param[1:end-1],exp(param[end]),liklWeitz_kernel_2_b(param, dat, D, nalt, epsilonDraw, etaDraw,scaling)
-
-
 
 #example1:
 model1 = Model(optimizer_with_attributes(Ipopt.Optimizer))
@@ -283,14 +114,28 @@ function liklWeitz_kernel_2_b(param, dat, D, nalt, epsilonDraw, etaDraw,scaling)
     # Choice rule
     #u_max = max_{j ∈ S\ y} u_j, where y is the chosen alternative
     #by defining u_max in this way, we can avoid adding small number to u_y - u_max
-    u_y = Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran) 
-    ut_searched_except_y = copy(ut_searched)
-    tran2 = repeat(tran, 1, D) 
-    ut_searched_except_y[tran2 .== 1] .= -Inf
-    ut_searched_ = reshape(ut_searched_except_y, nalt, N_cons, D)
-    u_max = maximum(ut_searched_, dims=1)
-    u_max = reshape(u_max, N_cons, D)
+
+    # u_y = Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran) 
+    # ut_searched_except_y = copy(ut_searched)
+    # tran2 = repeat(tran, 1, D) 
+    # ut_searched_except_y[tran2 .== 1] .= -Inf
+    # ut_searched_ = reshape(ut_searched_except_y, nalt, N_cons, D)
+    # u_max = maximum(ut_searched_, dims=1)
+    # u_max = reshape(u_max, N_cons, D)
     
+    ut_searched_except_y = copy(ut_searched)
+    ut_searched_except_y[repeat(tran, 1, D)  .== 1] .= -Inf
+
+    ut_tran = copy(ut)
+    ut_tran[repeat(tran, 1, D)  .== 0] .= -Inf
+    
+    u_max = zeros(N_cons, D)
+    u_y = zeros(N_cons, D)
+    for i = 1:N_cons
+        u_max[i, :] = maximum(ut_searched_except_y[(5*(i-1) + 1):5*i, :],dims = 1)
+        u_y[i, :] = maximum( ut_tran[(5*(i-1) + 1):5*i, :],dims = 1)
+    end 
+
     #choice = (u_y - u_max .>= 0)
     denom_ch = exp.(scaling[3].*(u_y - u_max) ⊗ ones(nalt)).* tran #(not anymore: if u_y == u_max, choice = 0.5 even with scaling = 0, So add 1e-5)
     
@@ -526,8 +371,8 @@ function liklWeitz_crude_2_b(param, dat, D, nalt, epsilonDraw, etaDraw)
     return -ll
 end
 
-scaling = [-10,-10,-10]
-@time liklWeitz_kernel_2_b([25.300569540301815, 10.395989246759356, -11.990564263937848, -12.92572032559815,-3.0], dat, D, nalt, epsilonDraw, etaDraw,scaling) #0.672222 seconds/ 8336.632434540048
+#scaling = [-10,-10,-10]
+@time liklWeitz_kernel_2_b(param, dat, D, nalt, epsilonDraw, etaDraw,scaling) #0.672222 seconds/ 5007.196627181486
 @time liklWeitz_kernel_2_btest(param0, dat, D, nalt, epsilonDraw, etaDraw,scaling) #0.262543 seconds
 -sum(log.(1e-10 .+ liklWeitz_crude_2(param, dat, D, nalt, epsilonDraw, etaDraw)))
 @time liklWeitz_crude_2_b(param, dat, D, nalt, epsilonDraw, etaDraw) #0.311123 seconds
@@ -547,18 +392,21 @@ param0 = zeros(5)
         )
 
 Optim.minimizer(result_crude);param
+
+
 @time result_crude_b = 
     Optim.optimize(
         param -> liklWeitz_crude_2_b(param,  dat, D, nalt, epsilonDraw, etaDraw),
-        param,
+        param0,
         NelderMead(),
         #BFGS(),LBFGS(), ConjugateGradient(), NelderMead(), Newton(), GradientDescent(), SimulatedAnnealing(), ParticleSwarm()
         autodiff=:central#,
         #optimizer = with_linesearch(BFGS(), Optim.HagerZhang()),
         #finite_difference_increment=1e-8
-        )
+        )#99.947188 seconds
 
-be_crude_b = Optim.minimizer(result_crude_b)
+[Optim.minimizer(result_crude_b)]
+#[0.7957613433333975, 0.8443758981988342, 0.41763633473963296, 0.17236759142126237, -2.609205389630544]
 
 @time result_kernel = 
     Optim.optimize(
@@ -575,18 +423,28 @@ be_kernel = Optim.minimizer(result_kernel)
 @time result_kernel_b = 
     Optim.optimize(
         param -> liklWeitz_kernel_2_b(param,  dat, D, nalt, epsilonDraw, etaDraw,scaling),
-        param,
+        param0,
         NelderMead(),
         #BFGS(),LBFGS(), ConjugateGradient(), NelderMead(), Newton(), GradientDescent(), SimulatedAnnealing(), ParticleSwarm()
         autodiff=:central#,
         #optimizer = with_linesearch(BFGS(), Optim.HagerZhang()),
         #finite_difference_increment=1e-8
-        )
+        )  #346.455561 seconds 
 
+#scaling = [-18, -4, -7]
+#result: [0.7117998485990567, 0.44142513980478787, 0.41209526929584883, 0.37021667170942973, -2.44932136162212]
+#scaling = [-20, -20, -20]
+#[0.513017262232145, 0.24909507916195586, 0.1926051794640007, 0.1715571110832792, -2.9917871477587967]
+#scaling = [-10, -5, -20]
+#[0.8622056357675261, 0.5672262878918438, 0.4502427956054259, 0.38728259169998425, -2.480362177002503]
 
+[Optim.minimizer(result_kernel_b)]
+[param]
+#[1.0, 0.7, 0.5, 0.3, -3.0]
+[[params_;log(c_)]]
+#scaling = [-18, -4, -7]
+#unfinished: [1.0030456337591422, 0.8982042350667948, 0.5610812409840122, 0.5487639022089433, -0.783163699966503]
 
-be_kernel_NM = Optim.minimizer(result_kernel_b)
-param
 param0 = zeros(5)
 param0[5] = -3.0
 upper = repeat([10.0], 5)
