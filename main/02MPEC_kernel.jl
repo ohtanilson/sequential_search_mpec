@@ -178,6 +178,6 @@ end
 maxtime = 10.0
 max_iter = 1
 @time params_,c_,objval_MPEC = Kernel_MPEC(maxtime)
-[params_;c_]
+[params_;log(c_)]
 param
 
