@@ -5,6 +5,7 @@ using Distributions,Random
 using CSV, DataFrames, DelimitedFiles, Statistics
 using Base.Threads
 using Optim
+
 c = exp(-3.0)
 scaling = [-18, -4, -7]
 param = [1.0, 0.7, 0.5, 0.3, -3.0]
