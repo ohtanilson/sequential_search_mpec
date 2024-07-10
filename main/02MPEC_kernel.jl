@@ -4,10 +4,13 @@ using Kronecker
 using JuMP
 using Ipopt
 using Distributions
-
-# std_normal = Normal(0.0, 1.0)
+using CSV, DataFrames, DelimitedFiles, Statistics
 
 scaling = [-18,-4,-7]
+i = 1
+seed = i
+data =  CSV.read("data/genWeitzDataS$i.csv", DataFrame,header=false) |> Matrix{Float64}
+D = 100
 
 function Kernel_MPEC(maxtime::Float64,max_iter::Int64)
 
@@ -167,10 +170,6 @@ max_iter = 6000
 objval_MPEC #-4593.1152076843055
 #julia benchmark:  [0.5863349297766002, 0.34251081276373263, 0.3715297786882639, 0.05747329606564218, -2.7592246317122147],  -4593.115152055782
 
-seed = 1
-scaling = [-18,-4,-7]
-
-m = 1.0
 GC.gc()
 
 
