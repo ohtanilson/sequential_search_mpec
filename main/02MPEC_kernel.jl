@@ -6,21 +6,26 @@ using Ipopt
 using Distributions
 using CSV, DataFrames, DelimitedFiles, Statistics
 
-scaling = [-18,-4,-7]
+scaling = [-20, -20, -20]
 i = 1
 seed = i
 data =  CSV.read("data/genWeitzDataS$i.csv", DataFrame,header=false) |> Matrix{Float64}
 D = 100
 
-function Kernel_MPEC(maxtime::Float64,max_iter::Int64)
+function Kernel_MPEC(maxtime::Float64,max_iter::Int64,tol::Float64 = 1e-6)
 
     #tolerance of constraint/ objective/ parameter
     model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>maxtime))
     set_optimizer_attribute(model, "max_iter", max_iter)
+    set_optimizer_attribute(model, "tol", tol)
     #global param # initial value list
     @variable(model, par[i = 1:4],start = 1.0) 
-    @variable(model, c >= 0.0,start = exp(-3.0)) 
-    @variable(model, m) #scaler
+    # @variable(model, par1,start = param[1]) 
+    # @variable(model, par2,start = param[2]) 
+    # @variable(model, par3,start = param[3]) 
+    # @variable(model, par4,start = param[4]) 
+    @variable(model, 2.0 >= c >= 0.0,start = exp(-3.0)) 
+    @variable(model, m,start = 1.258) #scaler
 
     # Data features
     consumer = data[:, 1]
@@ -45,8 +50,13 @@ function Kernel_MPEC(maxtime::Float64,max_iter::Int64)
     outside = data[:, 3]
     #@NLexpression(model,c, exp(params[end]) )
     X = data[:, 4:7]
+    # X1 = data[:, 4]
+    # X2 = data[:, 5]
+    # X3 = data[:, 6]
+    # X4 = data[:, 7]
 
-    eut = @expression(model, ((X * par ).+ etaDraw) .* (1 .- outside))
+    eut = @expression(model, (X*par .+ etaDraw) .* (1 .- outside))
+    #eut = @expression(model, ((X1*par1 .+ X2*par2 .+ X3*par3 .+ X4*par4 ).+ etaDraw) .* (1 .- outside))
 
     ut = @expression(model,eut .+ epsilonDraw)
     z = @expression(model, m .+ eut)
@@ -107,17 +117,18 @@ function Kernel_MPEC(maxtime::Float64,max_iter::Int64)
     # ut_searched_except_y_inf[repeat(tran, 1, D)  .== 1] .= -Inf
     # ut_searched_except_y  = @expression(model, ut_searched .+ ut_searched_except_y_inf)
 
-    ut_tran_inf = zeros(N_obs, D)
-    ut_tran_inf[repeat(tran, 1, D)  .== 0] .= -Inf
-    ut_tran = @expression(model, ut .+ ut_tran_inf)
+    # ut_tran_inf = zeros(N_obs, D)
+    # ut_tran_inf[repeat(tran, 1, D)  .== 0] .= -Inf
+    # ut_tran = @expression(model, ut .+ ut_tran_inf)
     # u_max = Array{NonlinearExpr,2}(undef,N_cons, D)
-    u_y = Array{NonlinearExpr,2}(undef,N_obs, D)
-    for i = 1:N_cons
-        for d = 1:D
-            #u_max[i, d] = @expression(model, maximum(ut[(5*(i-1) + 1):5*i, d]))
-            u_y[(5*(i-1) + 1):5*i, d] .= @expression(model, maximum( ut_tran[(5*(i-1) + 1):5*i, d])) 
-        end
-    end
+    # u_y = Array{NonlinearExpr,2}(undef,N_obs, D)
+    # for i = 1:N_cons
+    #     for d = 1:D
+    #         #u_max[i, d] = @expression(model, maximum(ut[(5*(i-1) + 1):5*i, d]))
+    #         u_y[(5*(i-1) + 1):5*i, d] .= @expression(model, maximum( ut_tran[(5*(i-1) + 1):5*i, d])) 
+    #     end
+    # end
+    u_y = @expression(model,(Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran)) ⊗ ones(nalt))
     v4 = @expression(model, (u_y - ut) )
 
     #denom
@@ -159,17 +170,31 @@ function Kernel_MPEC(maxtime::Float64,max_iter::Int64)
     @time JuMP.optimize!(model)
 
     
-    return JuMP.value.(params),JuMP.value.(c),JuMP.value.(m),JuMP.objective_value(model)
+    return JuMP.value.(par),JuMP.value.(c),JuMP.value.(m),JuMP.objective_value(model)
 end
-maxtime = 3600.0 # => 1042 iterations
-max_iter = 6000
+maxtime = 100.0 # => 1042 iterations
+max_iter = 300
 #not enough: maxtime = 3600.0, max_iter = 6000
 #maxtime was binding first, and max_iter was around 2500(?) at end 
-@time params_,c_,m_,objval_MPEC = Kernel_MPEC(maxtime,max_iter)
+@time res = [Kernel_MPEC(maxtime,max_iter,1e-2)]
 [[params_;log(c_)]] #[0.5872889646907962, 0.34346327406010513, 0.3724346107126989, 0.05837708724133401, -2.7583287415593416]
 objval_MPEC #-4593.1152076843055
 #julia benchmark:  [0.5863349297766002, 0.34251081276373263, 0.3715297786882639, 0.05747329606564218, -2.7592246317122147],  -4593.115152055782
 
+Random.seed!(1)
+epsilonDraw = randn(size(data, 1), D)
+etaDraw = randn(size(data, 1), D)
+result_k = 
+    Optim.optimize(
+        param -> liklWeitz_kernel_2_b(param,  data, D, scaling, epsilonDraw, etaDraw),
+        param,
+        NelderMead(),
+        #BFGS(),LBFGS(), ConjugateGradient(), NelderMead(), Newton(), GradientDescent(), SimulatedAnnealing(), ParticleSwarm()
+        autodiff=:central#,
+        #optimizer = with_linesearch(BFGS(), Optim.HagerZhang()),
+        #finite_difference_increment=1e-8
+        )#99.947188 seconds
+result_k.minimizer
 GC.gc()
 
 
