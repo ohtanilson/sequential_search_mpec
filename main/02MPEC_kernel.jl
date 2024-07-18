@@ -9,7 +9,7 @@ using CSV, DataFrames, DelimitedFiles, Statistics
 scaling = [-20, -20, -20]
 i = 1
 seed = i
-data =  CSV.read("data/genWeitzDataS$i.csv", DataFrame,header=false) |> Matrix{Float64}
+#data =  CSV.read("data/genWeitzDataS$i.csv", DataFrame,header=false) |> Matrix{Float64}
 D = 100
 
 function Kernel_MPEC(maxtime::Float64,max_iter::Int64,tol::Float64 = 1e-6)
@@ -174,9 +174,10 @@ function Kernel_MPEC(maxtime::Float64,max_iter::Int64,tol::Float64 = 1e-6)
 end
 maxtime = 100.0 # => 1042 iterations
 max_iter = 300
+tol = 1e-2
 #not enough: maxtime = 3600.0, max_iter = 6000
 #maxtime was binding first, and max_iter was around 2500(?) at end 
-@time res = [Kernel_MPEC(maxtime,max_iter,1e-2)]
+@time res = [Kernel_MPEC(maxtime,max_iter,tol)]
 [[params_;log(c_)]] #[0.5872889646907962, 0.34346327406010513, 0.3724346107126989, 0.05837708724133401, -2.7583287415593416]
 objval_MPEC #-4593.1152076843055
 #julia benchmark:  [0.5863349297766002, 0.34251081276373263, 0.3715297786882639, 0.05747329606564218, -2.7592246317122147],  -4593.115152055782
