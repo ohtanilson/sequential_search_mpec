@@ -145,7 +145,7 @@ D = 100
 seed = 1
 
 # Simulation inputs
-N_cons = 1000  # num of consumers
+N_cons = 10^5  # num of consumers
 N_prod = 5     # num of products
 param = [1, 0.7, 0.5, 0.3, -3]  # true parameter vector [4 brandFE, search cost constant (exp)]
 
