@@ -15,7 +15,7 @@ filename=mfilename;
 D=100%str2num(filename(17:19));
 
 %seed
-seed=1%str2num(filename(21:end));
+seed=str2num(filename(21:end));
 
 %-------------------------------------------------------
 % Simulation
