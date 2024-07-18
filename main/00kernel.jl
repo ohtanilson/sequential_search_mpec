@@ -93,11 +93,13 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
     ut_searched = copy(ut)
     searched2 = repeat(searched, 1, D)
     ut_searched[searched2 .== 0] .= -9999
+
     prob = zeros(N_cons, D)
     for d = 1:D
         # Best ut_so_far
         # ymax = cummax(reshape(ut_searched[:, d], nalt, N_cons));
         ut_matrix = reshape(ut_searched[:, d], nalt, N_cons)
+        ymax = zeros(5);
         for i = 1:N_cons
             temp_ymax = ut_matrix[:,i]
             temp_ymax = [maximum(temp_ymax[1:i]) for i = 1:length(temp_ymax)] 
@@ -110,10 +112,11 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
         # move outside to tail
         ymax = circshift(ymax, 1); 
         ymax = reshape(ymax, N_obs, 1);
-    
+        
         # Best z_next
         #zmax = Statistics.cummax(reshape(z(:, d), nalt, N_cons), 'reverse');
         z_matrix = reshape(z[:, d], nalt, N_cons)
+        zmax = zeros(5)
         for i = 1:N_cons
             temp_zmax = reverse(z_matrix[:,i])
             temp_zmax = reverse([maximum(temp_zmax[1:i]) for i = 1:length(temp_zmax)])
@@ -134,11 +137,10 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
 
         #selection rule: z>z_next
         denom_order=exp.(scaling_order*(z[:,d] .- zmax)).*has_searched.*searched.*(1 .- outside).*(1 .- last)
-
+    
         #stopping rule: z>u_so_far
         denom_search1 = exp.(scaling_search*(z[:,d] .- ymax)).*has_searched.*searched.*(1 .- outside)
-        denom_search2 = exp.(scaling_search*(ymax .- z[:,d])).*has_searched.*(1 .- searched)
-         .+ exp.(scaling_search*(u0_5 .- z[:,d])).*(1 .- has_searched).*(1 .- outside)
+        denom_search2 = exp.(scaling_search*(ymax .- z[:,d])).*has_searched.*(1 .- searched).+ exp.(scaling_search*(u0_5 .- z[:,d])).*(1 .- has_searched).*(1 .- outside)
 
         #choice rule :
         # this is not what the paper says, but it should work
@@ -151,7 +153,7 @@ function liklWeitz_kernel_2(param,dat,D,scaling,nalt,epsilonDraw,etaDraw)
         denom_ch=exp.(scaling_choice*(u_ch5 .- ut[:,d])).*(1 .- tran).*searched
 
         #1. create denom with all inputs 
-        denom = denom_order .+ denom_search1 .+ denom_search2 .+ denom_ch#denom_order .+ denom_search .+ denom_ch
+        denom =  denom_search2 .+ denom_search1 .+ denom_order .+ denom_ch#denom_order .+ denom_search .+ denom_ch
 
         #2. sum at the consumer level
         #denfull2=accumarray(consumer,denom)
