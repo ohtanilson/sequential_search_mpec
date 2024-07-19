@@ -168,8 +168,8 @@ function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol:
     return JuMP.value.(par),JuMP.value.(c),JuMP.value.(m),JuMP.objective_value(model),termination_status(model)
 end
 
-maxtime = 1.0 # => 1042 iterations
-max_iter = 300
+maxtime = 300.0 # => 1042 iterations
+max_iter = 400
 tol = 1e-2
 scaling = [-20, -20, -20]
 # @time res = Kernel_MPEC(data,maxtime,max_iter,tol,1)
