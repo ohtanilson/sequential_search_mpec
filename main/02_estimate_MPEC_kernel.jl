@@ -168,7 +168,7 @@ function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol:
     return JuMP.value.(par),JuMP.value.(c),JuMP.value.(m),JuMP.objective_value(model),termination_status(model)
 end
 
-maxtime = 300.0 # => 1042 iterations
+maxtime = 300.0
 max_iter = 400
 tol = 1e-2
 scaling = [-20, -20, -20]
@@ -196,7 +196,7 @@ data_all = CSV.read("data/sim_data_100.csv", DataFrame)
     results_MPEC[i, 1:5] .= [res_mpec[1];log(res_mpec[2])] 
     results_MPEC[i, 6:6] .= res_mpec[4]
     results_MPEC[i, 7:7] .= run_time 
-    append!(results_MPEC_term,[res[5]]) 
+    append!(results_MPEC_term,[res_mpec[5]]) 
     
     append!(fin, i)
     println("finished: ", length(fin), "/", 100)
