@@ -1,6 +1,6 @@
 using Distributions,Random
 using CSV, DataFrames, DelimitedFiles, Statistics
-using Optim, JLD2, MAT
+#using Optim, JLD2, MAT
 
 # construct look-up table
 m = -3.55:0.001:4
@@ -142,21 +142,29 @@ D = 100
 
 # Seed
 #seed = parse(Int, filename[21:end])
-seed = 1
+
 
 # Simulation inputs
-N_cons = 10^4  # num of consumers
+N_cons = 10^3  # num of consumers
 N_prod = 5     # num of products
 param = [1, 0.7, 0.5, 0.3, -3]  # true parameter vector [4 brandFE, search cost constant (exp)]
 
-# Simulate data
-data = simWeitz(N_cons, N_prod, param, seed)
-#data = MAT.matread("genWeitzDataS1.mat")["output"]
-# etaDraw = MAT.matread("etaDraw.mat")["etaDraw"]
-# epsilonDraw = MAT.matread("epsilonDraw.mat")["epsilonDraw"]
-# Load simulated data
-# data = load("genWeitzDataS$seed.mat")
-# data = data["data"]
+# Simulate 100 data
+data = simWeitz(N_cons, N_prod, param, 1)
+data = hcat(repeat([1],size(data,1)),data)
+for i = 2:100
+    seed = i
+    data_i = simWeitz(N_cons, N_prod, param, seed)
+    data_i = hcat(repeat([i],size(data_i,1)),data_i)
+    
+    data = vcat(data,data_i)
+end
+
+CSV.write("data/sim_data_100.csv",  Tables.table(data))
+#dataa = CSV.read("data/sim_data_100.csv", DataFrame) |> Matrix
+
+
+
 
 # Estimation
 # Initial parameter vector
