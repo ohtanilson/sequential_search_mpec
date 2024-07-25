@@ -20,7 +20,7 @@ function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol:
     # @variable(model, par2,start = param[2]) 
     # @variable(model, par3,start = param[3]) 
     # @variable(model, par4,start = param[4]) 
-    @variable(model, 2.0 >= c >= 0.0,start = exp(-3.0)) 
+    @variable(model, 2.0 >= c >= 0.0,start = exp(0.0)) 
     @variable(model, m,start = 1.258) #scaler
 
     # Data features
