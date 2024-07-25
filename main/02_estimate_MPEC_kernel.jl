@@ -6,6 +6,7 @@ using Ipopt
 using Distributions
 using CSV, DataFrames, DelimitedFiles, Statistics
 using Base.Threads
+using Random
 
 function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol::Float64 = 1e-6, seed::Int64 = 1)
 
@@ -168,23 +169,24 @@ function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol:
     return JuMP.value.(par),JuMP.value.(c),JuMP.value.(m),JuMP.objective_value(model),termination_status(model)
 end
 
-maxtime = 300.0
-max_iter = 400
-tol = 1e-2
+maxtime = 600.0
+max_iter = 500
+tol = 1e-3
 scaling = [-20, -20, -20]
+D = 100
 # @time res = Kernel_MPEC(data,maxtime,max_iter,tol,1)
 
 #estimate 100 Monte Carlo draws
 
 
-D = 100
+
 
 
 results_MPEC = zeros(100, 7)
 results_MPEC_term = []
 fin = []
 data_all = CSV.read("data/sim_data_100.csv", DataFrame) 
-@time @threads for i = 1:10
+@time @threads for i = 1:100 #
     #data
     data = data_all[data_all[:, 1] .== i, 2:end] |> Matrix{Float64}    
 
@@ -200,10 +202,26 @@ data_all = CSV.read("data/sim_data_100.csv", DataFrame)
     
     append!(fin, i)
     println("finished: ", length(fin), "/", 100)
+    GC.gc()
+    GC.gc()
 end
 
-results_MPEC_df = DataFrame(hcat(results_MPEC[1:1,:], results_MPEC_term),:auto)
+results_MPEC_df = DataFrame(hcat(results_MPEC, results_MPEC_term),:auto)
 #column names
 rename!(results_MPEC_df, names(results_MPEC_df) .=> ["beta1", "beta2", "beta3", "beta4", "logc", "loglik", "time", "converged"])
 
-CSV.write("results/results_MPEC.csv",results_MPEC_df, writeheader=false)
+CSV.write("results/results_MPEC_1.csv",results_MPEC_df, writeheader=false)
+
+param = [1.0, 0.7, 0.5, 0.3, -3.0]
+mean(results_MPEC_df[:,1] .- param[1])
+mean(results_MPEC_df[:,2] .- param[2])
+mean(results_MPEC_df[:,3] .- param[3])
+mean(results_MPEC_df[:,4] .- param[4])
+mean(results_MPEC_df[:,5] .- param[5])
+
+#standard deviation
+std(results_MPEC_df[:,1])
+std(results_MPEC_df[:,2])
+std(results_MPEC_df[:,3])
+std(results_MPEC_df[:,4])
+std(results_MPEC_df[:,5])
