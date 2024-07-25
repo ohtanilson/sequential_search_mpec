@@ -15,12 +15,12 @@ function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol:
     set_optimizer_attribute(model, "max_iter", max_iter)
     set_optimizer_attribute(model, "tol", tol)
     #global param # initial value list
-    @variable(model, par[i = 1:4],start = 1.0) 
+    @variable(model, par[i = 1:4],start = 0.0) 
     # @variable(model, par1,start = param[1]) 
     # @variable(model, par2,start = param[2]) 
     # @variable(model, par3,start = param[3]) 
     # @variable(model, par4,start = param[4]) 
-    @variable(model, 2.0 >= c >= 0.0,start = exp(-3.0)) 
+    @variable(model, 2.0 >= c >= 0.0,start = exp(0.0)) 
     @variable(model, m,start = 1.258) #scaler
 
     # Data features
