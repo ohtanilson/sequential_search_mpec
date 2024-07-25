@@ -486,7 +486,7 @@ rename!(result_kernel, names(result_kernel) .=> ["beta1", "beta2", "beta3", "bet
 
 CSV.write("results/results_kernel.csv",result_kernel, writeheader=false)
 result_kernel = CSV.read("results/results_kernel.csv",DataFrame, header=false)
-[result_kernel[1,:] |> Vector]
+#[result_kernel[1,:] |> Vector]
 result_kernel = result_kernel |> Matrix
 mean(result_kernel[:,1] .- param[1])
 mean(result_kernel[:,2] .- param[2])
