@@ -182,11 +182,13 @@ D = 100
 
 
 
-results_MPEC = zeros(100, 7)
+#results_MPEC = zeros(100, 7)
+results_MPEC = zeros(50, 7)
 results_MPEC_term = []
 fin = []
 data_all = CSV.read("data/sim_data_100.csv", DataFrame) 
-@time @threads for i = 1:100 #
+#@time @threads for i = 1:100 #
+@time for i = 1:50 #100 #
     #data
     data = data_all[data_all[:, 1] .== i, 2:end] |> Matrix{Float64}    
 
@@ -206,7 +208,7 @@ data_all = CSV.read("data/sim_data_100.csv", DataFrame)
     GC.gc()
 end
 
-results_MPEC_df = DataFrame(hcat(results_MPEC, results_MPEC_term),:auto)
+results_MPEC_df = DataFrame(hcat(results_MPEC[1:50,:], results_MPEC_term),:auto)
 #column names
 rename!(results_MPEC_df, names(results_MPEC_df) .=> ["beta1", "beta2", "beta3", "beta4", "logc", "loglik", "time", "converged"])
 
