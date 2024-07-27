@@ -1,0 +1,66 @@
+---
+title: "03_construct_figuretable"
+author: "Suguru Otani"
+date: "2024-01-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load {.tabset}
+
+```{r, echo=FALSE,results = "asis"}
+rm(list = ls())
+library(magrittr)
+library(ggplot2)
+library(modelsummary) # for N in datasummary
+
+results_MPEC_1 <-
+  readr::read_csv(file = here::here("results/results_MPEC_1.csv"),
+                  col_names = FALSE)
+true_param <-
+  c(
+    1.0,
+    0.7,
+    0.5,
+    0.3,
+    -3.0
+  )
+colnames(results_MPEC_1) <-
+  c(
+    "beta1",
+    "beta2",
+    "beta3",
+    "beta4",
+    "logc",
+    "loglik",
+    "time",
+    "converged"
+    )
+  
+```
+
+
+## MPEC {.tabset}
+
+### All
+
+```{r,echo=FALSE,results = "asis"}
+modelsummary::datasummary_skim(
+  data = results_MPEC_1,
+  "numeric"
+  )
+```
+
+### Locally solved
+
+```{r,echo=FALSE,results = "asis"}
+modelsummary::datasummary_skim(
+  data = results_MPEC_1 %>% 
+    dplyr::filter(converged == "LOCALLY_SOLVED"),
+  "numeric"
+  )
+```
+

@@ -1,0 +1,70 @@
+---
+title: "03_construct_figuretable"
+author: "Suguru Otani"
+date: "2024-01-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load {.tabset}
+
+```{r, echo=FALSE,results = "asis"}
+rm(list = ls())
+library(magrittr)
+library(ggplot2)
+library(modelsummary) # for N in datasummary
+
+sim_data_100 <-
+  readr::read_csv(file = here::here("data/sim_data_100.csv"),
+                  col_names = TRUE)
+true_param <-
+  c(
+    1.0,
+    0.7,
+    0.5,
+    0.3,
+    -3.0
+  )
+colnames(sim_data_100) <-
+  c(
+    "simulation_id",
+    "consumer_id",
+    "product_id",
+    "outside",
+    "X1",
+    "X2",
+    "X3",
+    "X4",
+    "last",
+    "has_searched",
+    "length_prod",
+    "searched",
+    "tran"
+    )
+  
+```
+
+
+## MPEC {.tabset}
+
+### numeric
+
+```{r,echo=FALSE,results = "asis"}
+modelsummary::datasummary_skim(
+  data = sim_data_100,
+  "numeric"
+  )
+```
+
+### categorical
+
+```{r,echo=FALSE,results = "asis"}
+# modelsummary::datasummary_skim(
+#   data = sim_data_100,
+#   "categorical"
+#   )
+```
+
