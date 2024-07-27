@@ -5,6 +5,7 @@
 %\usepackage[dvipdfmx]{hyperref,graphicx}
 \usepackage{graphicx}
 \usepackage{apacite}
+\usepackage{bm}
 
 \usepackage[colorlinks,citecolor=red,urlcolor=blue,bookmarks=false,hypertexnames=true]{hyperref,natbib} 
 \usepackage[top=15truemm]{geometry}
@@ -15,6 +16,8 @@
 \setlength{\evensidemargin}{-5.4truemm} % 
 \addtolength{\textwidth}{-40truemm}     % 右の余白も20mmに
 \renewcommand{\baselinestretch}{0.3}
+
+\renewcommand*{\epsilon}{\varepsilon}
 
 \usepackage{setspace}
 \setstretch{1.2}
@@ -155,15 +158,59 @@ Given the optimal decision rules and reservation utility formula, an MPEC estima
 \end{align}
 where individual likelihood $L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})$ is derived in Appendix.
 
-For comparison, I Follow \cite{ursu2023sequential} on the setting of the parameters of $\xi_{ij}$ and $c_{ij}$ in \eqref{eq:mpec_formula}. I compare their above first approach with MPEC. Table XX shows that MPEC estimator achieve better performance than the first approach without any ad hoc imposed assumption in a look-up table. However, computational time is longer than the first approach.
+For comparison, I Follow \cite{ursu2023sequential} on the setting of the parameters of $\xi_{ij}$ and $c_{ij}$ in \eqref{eq:mpec_formula}. I compare their above first approach with MPEC. 
+
+Table XX shows that our MPEC estimator achieve better performance than the first approach without any ad hoc imposed assumption in a look-up table. 
+\begin{itemize}
+    \item Bias and RMSE
+    \item However, computational time is longer than the first approach.
+\end{itemize}
+
+
 
 \section{Conclusion}
+\begin{itemize}
+    \item aaa
+\end{itemize}
 
 \appendix
 \section{Derivation of individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$}
 
-Following \cite{ursu2023sequential}, I construct individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$ as follows.
+Following \cite{ursu2023sequential}, I construct individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$ as follows. 
+\begin{align*}
+    L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}}) &= \Pr (\underbrace{z_{ih} \geq \max_{k \in \mathcal{J}\setminus \{1,\cdots,h\}} z_{ik} \: \forall h \in S_i}_{\text{selection rule}}\\
+    & \cap \underbrace{z_{ih} \geq \max_{k = 1}^{h-1} u_{ik} \: \forall h \in S_i \cap \max_{h \in S_i \cup \{0\}} u_{ih} \geq \max_{l \in \bar{S}_i} z_{il} }_{\text{stopping rule}}\\
+    & \cap \underbrace{u_{iy_i} \geq \max_{h \in S_i \cup \{0\}} u_{ih} }_{\text{choice rule}})
+\end{align*}
 
+
+\subsection{Crude estimator}
+
+Define
+\begin{align}
+    v_{i,1h} &= z_{ih} - \max_{k \in \mathcal{J}\setminus \{1,\cdots,h\}} z_{ik} \label{v1}\\
+    v_{i,2h} &=  z_{ih} - \max_{k = 1}^{h-1} u_{ik} \label{v2} \\
+    v_{i,3} &= \max_{h \in S_i \cup \{0\}} u_{ih} - \max_{l \in \bar{S}_i} z_{il} \label{v3}\\
+    v_{i,4} &= u_{iy_i} - \max_{h \in S_i \cup \{0\}} u_{ih}  \label{v4}
+\end{align}
+
+\begin{itemize}
+    \item[1] Take $d = (1, \cdots, D)$ sets of draws of $\mu_{ij}$ and $\epsilon_{ij}$ (each set of draws contains one draw of $\mu_{ij}$ and one draw of $\epsilon_{ij}$) for each consumer-product combination, i.e., $D\times J \times N$ sets of draws.
+    \item[2] For a given guess of parameters $\bm{\theta}$, compute $u^d_{ij}$ and $z^d_{ij}$ for each set of draws $d$ and each consumer-product combination.
+    \item[3] Calculate the expressions in equations \eqref{v1} to \eqref{v4} for each set of draws $d$ and each consumer. Compute the likelihood contribution for each consumer and draw:
+    \begin{align*}
+        L_i^d = \left[\prod_{h \in S_i} \bm{1}\{v^d_{i,1h} \geq 0\} \right] \times \left[\prod_{h \in S_i} \bm{1}\{v^d_{i,2h} \geq 0\} \right] \times  \bm{1}\{v^d_{i,3} \geq 0\}  \times  \bm{1}\{v^d_{i,4} \geq 0\}
+    \end{align*}
+    \item[4] Compute $L_i = \frac{1}{D}\sum_{d = 1}^D L_i^d$ for each consumer.
+    \item[5] Compute $\log L = \sum_{i = 1}^N \log(L_i)$
+\end{itemize}
+
+\begin{align*}
+    \max_{\theta}& \sum_{i\in \mathcal{N}} \log L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})\nonumber\\
+    \text{s.t.}\quad u_{i j} & =\xi_{i j}+\mu_{i j}+\varepsilon_{i j}\label{eq:mpec_formula}\\
+    z_{i j}&=\xi_{i j}+\mu_{i j}+m\left(c_{i j}\right) \nonumber\\
+    c_{i j}&=\phi(m)+m \times[\Phi(m)-1] \nonumber
+\end{align*}
 
 \bibliographystyle{aer}
 \bibliography{sequential_search}
