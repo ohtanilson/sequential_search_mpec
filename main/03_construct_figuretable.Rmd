@@ -19,8 +19,25 @@ library(modelsummary) # for N in datasummary
 
 results_MPEC_1 <-
   readr::read_csv(file = here::here("results/results_MPEC_1.csv"),
-                  col_names = FALSE)
-true_param <-
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_MPEC_1"
+  ) %>% 
+  dplyr::filter(
+    X8 == "LOCALLY_SOLVED"
+    )
+results_kernel <-
+  readr::read_csv(file = here::here("results/results_kernel.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_kernel"
+  ) 
+target_data <-
+  rbind(
+    results_MPEC_1,
+    results_kernel
+  ) 
+true_parameter <-
   c(
     1.0,
     0.7,
@@ -28,41 +45,187 @@ true_param <-
     0.3,
     -3.0
   )
-colnames(results_MPEC_1) <-
+colnames(target_data) <-
   c(
-    "beta1",
-    "beta2",
-    "beta3",
-    "beta4",
-    "logc",
+    "$\\beta_{1}$",
+    "$\\beta_{2}$",
+    "$\\beta_{3}$",
+    "$\\beta_{4}$",
+    "$\\log c$",
     "loglik",
     "time",
-    "converged"
+    "converged",
+    "filename"
     )
-
+# 
+create_table_with_demand_shifter_bias_rmse <-
+  function(target_data){
+    bias_info <-
+      target_data %>% 
+      dplyr::group_by(filename) %>% 
+      # Redefine variables as the errors
+      dplyr::summarise(
+        `$\\beta_{1}$` =
+          mean(`$\\beta_{1}$` -
+                 true_parameter[1],
+               na.rm = TRUE),
+        `$\\beta_{2}$` =
+          mean(`$\\beta_{2}$` -
+                 true_parameter[2],
+               na.rm = TRUE),
+        `$\\beta_{3}$` =
+          mean(`$\\beta_{3}$` -
+                 true_parameter[3],
+               na.rm = TRUE),
+        `$\\beta_{4}$` =
+          mean(`$\\beta_{4}$` -
+                 true_parameter[4],
+               na.rm = TRUE),
+        `$\\log c$` =
+          mean(`$\\log c$` -
+                 true_parameter[5],
+               na.rm = TRUE)
+      ) %>% 
+      dplyr::ungroup()
+    rmse_info <-
+      target_data %>% 
+      dplyr::group_by(filename) %>% 
+      dplyr::summarise(
+        `$\\beta_{1}$` =
+          sqrt(mean((`$\\beta_{1}$` -
+                       true_parameter[1])^2,
+               na.rm = TRUE)),
+        `$\\beta_{2}$` =
+          sqrt(mean((`$\\beta_{2}$` -
+                       true_parameter[2])^2,
+               na.rm = TRUE)),
+        `$\\beta_{3}$` =
+          sqrt(mean((`$\\beta_{3}$` -
+                       true_parameter[3])^2,
+               na.rm = TRUE)),
+        `$\\beta_{4}$` =
+          sqrt(mean((`$\\beta_{4}$` -
+                       true_parameter[4])^2,
+               na.rm = TRUE)),
+        `$\\log c$` =
+          sqrt(mean((`$\\log c$` -
+                       true_parameter[5])^2,
+               na.rm = TRUE))
+      ) %>% 
+      dplyr::ungroup()
+    file_name_list <-
+      unique(
+        rmse_info$filename)
+    for(nn in 1:length(file_name_list)){
+      temp_file_name <-
+        as.character(
+          file_name_list[nn])
+      temp_bias <-
+        bias_info %>% 
+        dplyr::filter(
+          filename == 
+            temp_file_name
+        )
+      temp_rmse <-
+        rmse_info %>% 
+        dplyr::filter(
+          filename == 
+            temp_file_name
+          )
+      temp_bias_rmse <-
+        data.frame(
+          "Bias" = 
+            format(
+              round(
+                t(temp_bias[-1]),
+                digits = 3),
+              nsmall = 3),
+          "RMSE" = 
+            format(
+              round(
+                t(temp_rmse[-1]),
+                digits = 3),
+              nsmall = 3)
+          )
+      if(nn == 1){
+        all_bias_rmse <-
+          temp_bias_rmse
+      }else{
+        #merge 
+        all_bias_rmse <-
+          cbind(
+            all_bias_rmse,
+            temp_bias_rmse)
+      }
+    }
+    new_rows <-
+      data.frame(
+        #"Sample size ($T$)",
+        #"",
+        "MPEC",
+        "",
+        "Benchmark",
+        ""#,
+        # "200",
+        # "",
+        # "1000"
+        )
+    colnames(new_rows) <-
+      colnames(all_bias_rmse)
+    all_bias_rmse_for_latex <-
+      rbind(
+        all_bias_rmse,
+        new_rows
+        )
+    # rownames(all_bias_rmse_for_latex)[10] <-
+    #   "Sample size ($T$)"
+    filelocation <-
+      paste(
+        "figuretable/",
+        deparse(
+          substitute(
+            target_data
+            )
+          ),
+        as.character(),
+        "_bias_rmse",
+        ".tex",
+        sep = "")
+    all_bias_rmse_for_latex %>% 
+      kableExtra::kbl(
+        format = "latex",
+        align = c("l","r","r","r","r","r","r","r","r"),
+        escape = FALSE,
+        booktabs = TRUE,
+        linesep = ""
+      ) %>% 
+      kableExtra::save_kable(
+        file = here::here(
+          filelocation
+        )
+      )
+    res <-
+      all_bias_rmse_for_latex %>% 
+      kableExtra::kable() %>% 
+      kableExtra::kable_styling()
+    return(res)
+  }
 
 
 ```
 
 
-## MPEC {.tabset}
-
-### All
-
-```{r,echo=FALSE,results = "asis"}
-modelsummary::datasummary_skim(
-  data = results_MPEC_1,
-  "numeric"
-  )
-```
+## Table 1 {.tabset}
 
 ### Locally solved
 
 ```{r,echo=FALSE,results = "asis"}
-modelsummary::datasummary_skim(
-  data = results_MPEC_1 %>% 
-    dplyr::filter(converged == "LOCALLY_SOLVED"),
-  "numeric"
-  )
+res <-
+  create_table_with_demand_shifter_bias_rmse(
+    target_data = target_data
+    )
+res
 ```
+
+
 

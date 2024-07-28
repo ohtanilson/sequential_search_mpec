@@ -5,7 +5,7 @@ Distributed.@everywhere include("../main/00_setting_julia.jl")
 Distributed.@everywhere include("../main/00_functions.jl")
 
 # setup for MPEC
-maxtime = 400.0
+maxtime = 600.0
 max_iter = 500
 tol = 1e-3
 scaling = [-20, -20, -20]
@@ -14,18 +14,17 @@ D = 100
 simulation_num = 50
 
 #results_MPEC = zeros(100, 7)
-results_MPEC = zeros(simulation_num, 7)
-results_MPEC_term = []
-fin = []
-
-for N_cons = [10^3,2*10^3,3*10^3]
+for N_cons = [10^3,2*10^3]
     @show N_cons
+    results_MPEC = zeros(simulation_num, 7)
+    results_MPEC_term = []
+    fin = []
     filename_begin = "../sequential_search_mpec/output/sim_data"
     filename_end   = ".csv"
     filename = filename_begin*"_consumer_"*string(N_cons)*"_error_draw_"*string(D)*filename_end
     data_all = CSV.read(filename, DataFrame) 
-    #@time @threads for i = 1:100 # for parallel computation
-    @time for i = 1:simulation_num #100 #
+    @time @threads for i = 1:simulation_num # for parallel computation
+    #@time for i = 1:simulation_num #100 #
         #data
         data = data_all[data_all[:, 1] .== i, 2:end] |> Matrix{Float64}    
         run_time = @elapsed begin 
