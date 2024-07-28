@@ -16,7 +16,10 @@
 \setlength{\evensidemargin}{-5.4truemm} % 
 \addtolength{\textwidth}{-40truemm}     % 右の余白も20mmに
 \renewcommand{\baselinestretch}{0.3}
-
+\usepackage{float}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{booktabs}
 \renewcommand*{\epsilon}{\varepsilon}
 
 \usepackage{setspace}
@@ -42,14 +45,18 @@ To overcome the problem, we propose a new estimator based on the mathematical pr
 with equilibrium constraints (MPEC) approach advocated by \cite{su2012constrained}. 
 MPEC is a constrained optimization problem whose constraint structure contains the equilibrium constraints.
 The main advantage of MPEC is that MPEC does not need to solve the fixed point problem iteratively, which is well known in the demand estimation \citep{dube2012improving}, dynamic programming \citep{su2012constrained,egesdal2015estimating}, and misclassification model \citep{lu2014mpec}.
-Based on Monte Carlo simulations, we show that MPEC estimator works better for the sequential search model relative to the nested fixed point approaches and the advantage carries over. 
-We also show that increasing the sample size improves the accuracy of estimation. 
-We conclude that XXX.
+Also, it does not incorporate approximation and estimation errors of equilibrium constraints induced by the other approaches.
+\textcolor{blue}{
+Based on Monte Carlo simulations, MPEC shows comparable or better performance for the sequential search model relative to the nested fixed point approaches and the advantage carries over. 
+The main drawbacks of MPEC are the use of PC memory and computational time.
+We conclude that MPEC is a better alternative among the current approaches when the approximation and estimation errors and ad hoc look-up table are unknown to researchers.
+}
+
 
 \section{Weitzman's sequential search model}
 
 \subsection{The Weitzman (1979) Framework}
-I construct the sequential
+weconstruct the sequential
 search model based on \cite{weitzman1979optimal}.
 See the detail in the unified survey of \cite{ursu2023sequential} and \cite{honka2019empirical}. 
 A decision maker $i$ faces a set of $\mathcal{J}=\{1,\cdots,J\}$ boxes and box $j$ gives a potential reward $u_{ij}\in \mathbb{R}$ independently drawn from a known
@@ -141,12 +148,9 @@ Similar problems on demand estimation are discussed and resolved by MPEC introdu
 
 
 \section{An MPEC estimator for the sequential search model}
-As the fifth method, I propose a novel and simple estimator for the sequential search model by utilizing
-the Mathematical Programming with Equilibrium Constraints (MPEC) procedure advocated
-by \cite{su2012constrained}. 
-Our setting is similar to \cite{su2012constrained} in which the likelihood function
-function with equilibrium constraints is constructed. 
-MPEC estimator avoids the iterative computations to find the fixed point by evaluating the equilibrium equations as constraints.
+As the fifth method, we propose a novel and simple estimator for the sequential search model by utilizing the Mathematical Programming with Equilibrium Constraints (MPEC) procedure advocated by \cite{su2012constrained}. 
+Our setting is similar to \cite{su2012constrained} in which the likelihood function function with equilibrium constraints is constructed. 
+MPEC estimator avoids iterative computations to find the fixed point by evaluating the equilibrium equations as constraints.
 
 Define $\theta$ as a set of parameters.
 Given the optimal decision rules and reservation utility formula, an MPEC estimator solves the following constrained problem:
@@ -157,16 +161,35 @@ Given the optimal decision rules and reservation utility formula, an MPEC estima
     c_{i j}&=\phi(m)+m \times[\Phi(m)-1] \nonumber
 \end{align}
 where individual likelihood $L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})$ is derived in Appendix.
+A remarkable advantage of MPEC is that it does not need an ad hoc look-up table which is unknown to researchers and does not incorporate approximation and estimation error of equilibrium constraints \eqref{eq:equilibrium_constraint}, in addition to the main advantage of MPEC that it does not need to solve the fixed point problem iteratively.
 
-For comparison, I Follow \cite{ursu2023sequential} on the setting of the parameters of $\xi_{ij}$ and $c_{ij}$ in \eqref{eq:mpec_formula}. I compare their above first approach with MPEC. 
+\section{Monte Carlo simulation results}
 
-Table XX shows that our MPEC estimator achieve better performance than the first approach without any ad hoc imposed assumption in a look-up table. 
+For comparison, we follow Appendix B of \cite{ursu2023sequential} on the setting of the parameters of $\xi_{ij}$ and $c_{ij}$ in \eqref{eq:mpec_formula}. 
+We compare MPEC with their kernel-smoothed frequency estimator with a look-up table, the most frequently used method in empirical work. 
+We construct 50 simulation data for 1,000 consumers who make search and purchase decisions in a sequential search manner with four brands and an outside option (with mean utility normalized to zero). The utility function only consists of brand intercepts, denoted as $(\beta_1,\beta_2,\beta_3,\beta_4)=(1.0, 0.7. 0.5, 0.3)$. 
+The log of search cost $\log c=-3.0$. We use $D=100$ draws of the error terms.
+\textcolor{blue}{For the kernel-smoothed frequency simulator, we use the
+scaling vector.}
+
+Table \ref{tb:results_MPEC_1_bias_rmse} reports the bias and root-mean-squared-error (RMSE) of estimated coefficients across the 50 data simulations.
+It shows that our MPEC estimator achieves better performance than the first approach without any ad hoc imposed assumption in a look-up table. 
 \begin{itemize}
     \item Bias and RMSE
     \item However, computational time is longer than the first approach.
+    \item olumn (4) in Table B1: Monte Carlo Simulation Results.
 \end{itemize}
 
-
+\begin{table}[!htbp]
+  \begin{center}
+      \caption{MPEC vs benchmark \textcolor{blue}{[TBA]}}
+      \label{tb:results_MPEC_1_bias_rmse} 
+      \subfloat[MPEC (kernel) $\sigma=20$]{\input{figuretable/results_MPEC_1_bias_rmse}}
+      \subfloat[Benchmark (kernel)]{\input{figuretable/results_MPEC_1_bias_rmse}}
+  \end{center}
+  \footnotesize
+  Note: 
+\end{table} 
 
 \section{Conclusion}
 \begin{itemize}
@@ -176,7 +199,7 @@ Table XX shows that our MPEC estimator achieve better performance than the first
 \appendix
 \section{Derivation of individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$}
 
-Following \cite{ursu2023sequential}, I construct individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$ as follows. 
+Following \cite{ursu2023sequential}, weconstruct individual likelihood $L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}})$ as follows. 
 \begin{align*}
     L_{i}(\theta,(z_{ij}(\theta))_{j\in \mathcal{J}}) &= \Pr (\underbrace{z_{ih} \geq \max_{k \in \mathcal{J}\setminus \{1,\cdots,h\}} z_{ik} \: \forall h \in S_i}_{\text{selection rule}}\\
     & \cap \underbrace{z_{ih} \geq \max_{k = 1}^{h-1} u_{ik} \: \forall h \in S_i \cap \max_{h \in S_i \cup \{0\}} u_{ih} \geq \max_{l \in \bar{S}_i} z_{il} }_{\text{stopping rule}}\\
@@ -211,6 +234,12 @@ Define
     z_{i j}&=\xi_{i j}+\mu_{i j}+m\left(c_{i j}\right) \nonumber\\
     c_{i j}&=\phi(m)+m \times[\Phi(m)-1] \nonumber
 \end{align*}
+
+\subsection{Kernel estimator}
+
+\begin{itemize}
+    \item aaa
+\end{itemize}
 
 \bibliographystyle{aer}
 \bibliography{sequential_search}
