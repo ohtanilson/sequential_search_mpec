@@ -62,6 +62,25 @@ results_MPEC_consumer_1000_error_draw_100_scaling_50_50_50 <-
   dplyr::filter(
     X8 == "LOCALLY_SOLVED"
     )
+results_MPEC_consumer_1000_error_draw_100_scaling_100_100_100 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-100-100-100.csv"),
+                  col_names = FALSE) %>%
+  dplyr::mutate(
+    filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-100-100-100"
+  ) %>%
+  dplyr::filter(
+    X8 == "LOCALLY_SOLVED"
+    )
+
+results_MPEC_consumer_1000_error_draw_100_scaling_20_20_50 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-50.csv"),
+                  col_names = FALSE) %>%
+  dplyr::mutate(
+    filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-50"
+  ) %>%
+  dplyr::filter(
+    X8 == "LOCALLY_SOLVED"
+    )
 true_parameter <-
   c(
     1.0,
@@ -112,3 +131,10 @@ modelsummary::datasummary_skim(results_MPEC_consumer_1000_error_draw_100_scaling
 ```{r,echo=FALSE,results = "asis"}
 modelsummary::datasummary_skim(results_MPEC_consumer_1000_error_draw_100_scaling_50_50_50)
 ```
+
+### results_MPEC_consumer_1000_error_draw_100_scaling_20_20_50
+
+```{r,echo=FALSE,results = "asis"}
+modelsummary::datasummary_skim(results_MPEC_consumer_1000_error_draw_100_scaling_20_20_50)
+```
+
