@@ -9,6 +9,7 @@ D = 100
 simulation_num = 50
 N_cons_vec = [10^3,2*10^3,3*10^3]
 table = readdlm("data/tableZ.csv", ',', Float64)
+results_crude_nested_df = DataFrame()
 
 function estimate_crude_nested(D,simulation_num, N_cons_vec,table)
     for N_cons = N_cons_vec
