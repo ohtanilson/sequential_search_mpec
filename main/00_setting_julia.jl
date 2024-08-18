@@ -4,3 +4,4 @@ using CSV, DataFrames, DelimitedFiles, Statistics
 using LinearAlgebra, Kronecker
 using JuMP, Ipopt # for MPEC
 using Base.Threads # for parallel computation
+using Optim #for Nelder Mead estimation

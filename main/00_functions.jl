@@ -111,7 +111,7 @@ function simWeitz(N_cons, N_prod, param, table, seed)
 end
 
 
-function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol::Float64 = 1e-6, seed::Int64 = 1)
+function Kernel_MPEC(data::Matrix{Float64},scaling::Vector{Int64},D::Int64,maxtime::Float64,max_iter::Int64,tol::Float64 = 1e-6, seed::Int64 = 1)
 
     #tolerance of constraint/ objective/ parameter
     model = JuMP.Model(optimizer_with_attributes(Ipopt.Optimizer, "max_cpu_time"=>maxtime))
@@ -270,4 +270,289 @@ function Kernel_MPEC(data::Matrix{Float64},maxtime::Float64,max_iter::Int64,tol:
 
     
     return JuMP.value.(par),JuMP.value.(c),JuMP.value.(m),JuMP.objective_value(model),termination_status(model)
+end
+
+function estimate_kernel_NelderMead(data::Matrix{Float64},scaling::Vector{Int64},D::Int64,table::Matrix{Float64},seed::Int64 = 1)
+    # Generate random draws
+    Random.seed!(seed)
+    epsilonDraw = randn(size(data, 1), D)
+    etaDraw = randn(size(data, 1), D)
+
+    param = [0.0, 0.0, 0.0, 0.0, 0.0]
+    result_kernel = 
+        Optim.optimize(
+            param -> liklWeitz_kernel(param,  data, D, scaling, table, epsilonDraw, etaDraw),
+            param,
+            NelderMead(),
+            #BFGS(),LBFGS(), ConjugateGradient(), NelderMead(), Newton(), GradientDescent(), SimulatedAnnealing(), ParticleSwarm()
+            autodiff=:central#,
+            #optimizer = with_linesearch(BFGS(), Optim.HagerZhang()),
+            #finite_difference_increment=1e-8
+            )
+
+        return   Optim.minimizer(result_kernel), -Optim.minimum(result_kernel),Optim.converged(result_kernel)
+end
+
+
+
+function estimate_crude_NelderMead(data::Matrix{Float64},D::Int64,table::Matrix{Float64},seed::Int64 = 1)
+    # Generate random draws
+    Random.seed!(seed)
+    epsilonDraw = randn(size(data, 1), D)
+    etaDraw = randn(size(data, 1), D)
+
+    param = [0.0, 0.0, 0.0, 0.0, 0.0]
+    result_crude = 
+        Optim.optimize(
+            param -> liklWeitz_crude(param,  data, D, table, epsilonDraw, etaDraw),
+            param,
+            NelderMead(),
+            #BFGS(),LBFGS(), ConjugateGradient(), NelderMead(), Newton(), GradientDescent(), SimulatedAnnealing(), ParticleSwarm()
+            autodiff=:central#,
+            #optimizer = with_linesearch(BFGS(), Optim.HagerZhang()),
+            #finite_difference_increment=1e-8
+            )
+
+        return   Optim.minimizer(result_crude), -Optim.minimum(result_crude),Optim.converged(result_crude)
+end
+
+
+
+
+function liklWeitz_kernel(param, data, D, scaling, table, epsilonDraw, etaDraw)
+    # Data features
+    consumer = data[:, 1]
+    N_cons = length(Set(consumer))
+
+    #N_prod = data[:, end - 2]
+    N_prod = data[:, end - 2]
+    Js = unique(N_prod)
+
+    i = 1
+
+    nalt = Int.(Js[i])
+    N_obs = size(data, 1)
+    #uniCons = Int.(N_obs/nalt)
+    #consid2 = reshape(dat[:, 1], nalt, uniCons)
+
+    # Choices
+    tran = data[:, end]
+    searched = data[:, end - 1]
+    lasts = data[:, end - 4]
+
+    # Parameters
+    outside = data[:, 3]
+    c = exp(param[end]) 
+    X = data[:, 4:7]
+    xb = X * param[1:end-1] 
+    eut = (xb .+ etaDraw) .* (1 .- outside)
+    ut = eut .+ epsilonDraw
+
+    # Form Z's using look-up table method
+    #table = readdlm("tableZ.csv", ',', Float64)
+    #global  table
+    #m = zeros(1)
+    
+    #for i = 1:N_obs
+    lookupvalue = abs.(table[:, 2] .- c)
+    if (table[1, 2] >= c && c >= table[end, 2])
+        index_m = argmin(lookupvalue)
+        m = table[index_m, 1]
+    elseif table[1, 2] < c
+        m = -c # lower bound m
+    elseif c < table[end, 2]
+        m = 4.001 # upper bound m
+    end
+    #end
+    z = m .+ eut
+
+    ut_searched = copy(ut)
+    searched2 = repeat(searched, 1, D)
+    ut_searched[searched2 .== 0] .= -Inf
+    
+    # Selection rule: z > z_next
+    z_reshape = reshape(z, nalt, N_cons, D)
+    z_max = copy(z_reshape)
+    for i in 1:(nalt-2) #not for outside option
+        z_max[nalt-i,:,:] = maximum(z_reshape[nalt-i+1:nalt,:,:] ,dims=1)
+    end
+    #z_max[:,:,1];z_reshape[:,:,1]
+    z_max = reshape(z_max,N_obs, D) 
+    
+    denom_order = exp.(scaling[1].*(z .- z_max)) .* searched .* (1 .- outside).*(1 .- lasts) #0 for outside option and searched = 0
+
+    # # Stopping rule: z > u_so_far
+    ut_searched_reshape = reshape(ut_searched, nalt, N_cons, D)
+    u_so_far = copy(ut_searched_reshape)
+    for i in 2:nalt
+        u_so_far[i, :, :] = max.(u_so_far[i, :, :], u_so_far[i - 1, :, :])
+    end
+    u_so_far =  circshift(u_so_far, 1) #same as cat(u_so_far[nalt,:,:],u_so_far[1:(nalt - 1),:,:], dims=1) #0.000707
+    u_so_far = reshape(u_so_far, N_obs, D)
+
+    denom_search1 = 
+        #search until
+        exp.(scaling[2]*(z .- u_so_far)).*(1 .- outside) .* searched 
+        #not search from (search = 1 if outside = 1)
+    
+    denom_search2 = exp.(scaling[2]*(u_so_far .- z)).*(1 .- searched) #0 for outside option
+
+    # Choice rule
+    #u_max = max_{j ∈ S\ y} u_j, where y is the chosen alternative
+    #by defining u_max in this way, we can avoid adding small number to u_y - u_max
+
+    # u_y = Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran) 
+    # ut_searched_except_y = copy(ut_searched)
+    # tran2 = repeat(tran, 1, D) 
+    # ut_searched_except_y[tran2 .== 1] .= -Inf
+    # ut_searched_ = reshape(ut_searched_except_y, nalt, N_cons, D)
+    # u_max = maximum(ut_searched_, dims=1)
+    # u_max = reshape(u_max, N_cons, D)
+    
+    # ut_searched_except_y = copy(ut_searched)
+    # ut_searched_except_y[repeat(tran, 1, D)  .== 1] .= -Inf
+    # ut_tran = copy(ut)
+    # ut_tran[repeat(tran, 1, D)  .== 0] .= -Inf
+    
+    # u_y = zeros(N_obs, D)
+    # for i = 1:N_cons
+    #    # u_max[i, :] = maximum(ut_searched_except_y[(5*(i-1) + 1):5*i, :],dims = 1)
+    #     u_y[(5*(i-1) + 1):5*i, :] .= maximum( ut_tran[(5*(i-1) + 1):5*i, :],dims = 1)
+    # end 
+    u_y = (Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran)) ⊗ ones(nalt)
+
+    #choice = (u_y - u_max .>= 0)
+    denom_ch=exp.(scaling[3].*(u_y - ut)).*(1 .- tran).*searched
+    #denom_ch = exp.(scaling[3].*(u_y - u_max) ⊗ ones(nalt)).* tran #(not anymore: if u_y == u_max, choice = 0.5 even with scaling = 0, So add 1e-5)
+    
+    # Combine all inputs
+    denom = reshape(denom_order .+denom_search1 .+ denom_search2 .+ denom_ch, 
+    #denom = reshape(denom_ch ,
+        nalt, N_cons, D)#reshape(denom_order .+ denom_search1 .+ denom_search2, nalt, N_cons, D)
+    denom = sum(denom, dims=1) #prod(search_2_reshape, dims=1)
+    denom = reshape(denom, N_cons, D)
+
+    #denom =  denom_order_search .+ denom_ch #denom_order_search .+ denom_ch
+    
+    denfull_t = denom .> 0.0 .&& denom .< 2.2205e-16
+    denom[denfull_t] .= 2.2205e-16
+    denfull_t2 = denom .>  2.2205e+16
+    denom[denfull_t2] .= 2.2205e+16
+
+    prob = 1 ./ (1 .+ denom)
+    
+    # Average across D
+    llk = mean(prob, dims=2)
+    #return llk
+    ll = sum(log.(1e-10 .+ llk))
+
+    #println(param)
+    #println(ll)
+    return -ll
+end
+
+function liklWeitz_crude(param, data, D, table, epsilonDraw, etaDraw)
+    # Data features
+    consumer = data[:, 1]
+    N_cons = length(Set(consumer))
+
+    #N_prod = data[:, end - 2]
+    N_prod = data[:, end - 2]
+    Js = unique(N_prod)
+
+    i = 1
+
+    nalt = Int.(Js[i])
+    N_obs = size(data, 1)
+    #uniCons = Int.(N_obs/nalt)
+    #consid2 = reshape(dat[:, 1], nalt, uniCons)
+
+    # Choices
+    tran = data[:, end]
+    searched = data[:, end - 1]
+
+    # Parameters
+    outside = data[:, 3]
+    c = exp(param[end]) * ones(N_obs)
+    X = data[:, 4:7]
+    xb = X * param[1:end-1] #param[1:end-1]
+    eut = (xb .+ etaDraw) .* (1 .- outside)
+    ut = eut .+ epsilonDraw
+
+    # Form Z's using look-up table method
+    #table = readdlm("tableZ.csv", ',', Float64)
+    #global  table
+    m = zeros(N_obs)
+
+    for i = 1:N_obs
+        lookupvalue = abs.(table[:, 2] .- c[i])
+        if (table[1, 2] >= c[i] && c[i] >= table[end, 2])
+            index_m = argmin(lookupvalue)
+            m[i] = table[index_m, 1]
+        elseif table[1, 2] < c[i]
+            m[i] = -c[i] # lower bound m
+        elseif c[i] < table[end, 2]
+            m[i] = 4.001 # upper bound m
+        end
+    end
+
+    z = m .+ eut
+
+    ut_searched = copy(ut)
+    searched2 = repeat(searched, 1, D)
+    ut_searched[searched2 .== 0] .= -Inf
+    
+    # Selection rule: z > z_next
+    z_reshape = reshape(z, nalt, N_cons, D)
+    z_max = copy(z_reshape)
+    for i in 1:(nalt-2) #not for outside option
+        z_max[nalt-i,:,:] = maximum(z_reshape[nalt-i:nalt,:,:] ,dims=1)
+    end
+    z_max = reshape(z_max,N_obs, D) 
+    v1h = (z .- z_max) .* searched .* (1 .- outside) .+
+            1.0 .* (1 .- (1 .- outside) .* searched)
+    order = (v1h .>= 0)
+
+    # # Stopping rule: z > u_so_far
+    ut_searched_reshape = reshape(ut_searched, nalt, N_cons, D)
+    u_so_far = copy(ut_searched_reshape)
+    for i in 2:nalt
+        u_so_far[i, :, :] = max.(u_so_far[i, :, :], u_so_far[i - 1, :, :])
+    end
+    u_so_far =  circshift(u_so_far, 1) #same as cat(u_so_far[nalt,:,:],u_so_far[1:(nalt - 1),:,:], dims=1) #0.000707
+    u_so_far = reshape(u_so_far, N_obs, D)
+
+    #search until
+    v2h = (z .- u_so_far) .* (1 .- outside) .* searched .+ 1.0 .* (1 .- (1 .- outside) .* searched)  
+    search_1 = (v2h .>= 0 )
+    #not search from
+    #search = 1 if outside = 1
+    v3 = (u_so_far .- z) .* (1 .- searched) .+ 1.0 .* searched
+    search_2 = (v3 .>= 0)
+ 
+    
+    # Choice rule
+    u_y = Diagonal(ones(N_cons)) ⊗ ones(1,nalt) * (ut.* tran)
+    ut_searched_reshape = reshape(ut_searched, nalt, N_cons, D)
+    u_max = maximum(ut_searched_reshape, dims=1)
+    u_max = reshape(u_max, N_cons, D)
+
+    choice = (u_y - u_max .>= 0)
+
+    # Combine all inputs
+    order_search_reshape = reshape(order .* search_1 .* search_2   , 
+    nalt, N_cons, D)#reshape(order .* search_1 .* search_2, nalt, N_cons, D)
+    order_search = minimum(order_search_reshape, dims=1) #prod(search_2_reshape, dims=1)
+    order_search = reshape(order_search, N_cons, D)
+
+    chain_mult =  order_search .* choice#order_search .* choice
+    
+    # Average across D
+    llk = mean(chain_mult, dims=2)
+    #return llk
+    ll = sum(log.(1e-10 .+ llk))
+    #println(param)
+    #println(ll)
+
+    return -ll
 end

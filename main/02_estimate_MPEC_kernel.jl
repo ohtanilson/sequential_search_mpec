@@ -29,7 +29,7 @@ function estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_c
             #data
             data = data_all[data_all[:, 1] .== i, 2:end] |> Matrix{Float64}    
             run_time = @elapsed begin 
-                    res_mpec = Kernel_MPEC(data,maxtime,max_iter,tol,i)
+                    res_mpec = Kernel_MPEC(data,scaling,D,maxtime,max_iter,tol,i)
                 end
             
             results_MPEC[i, 1:5] .= [res_mpec[1];log(res_mpec[2])] 
