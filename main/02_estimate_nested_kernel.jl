@@ -10,7 +10,7 @@ simulation_num = 50
 scaling = [-20, -20, -20]
 N_cons_vec = [10^3,2*10^3,3*10^3]
 table = readdlm("data/tableZ.csv", ',', Float64)
-
+results_kernel_nested_df = DataFrame()
 function estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec,table)
     for N_cons = N_cons_vec
         @show N_cons
@@ -49,11 +49,12 @@ function estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec,table)
         CSV.write(filename, results_kernel_nested_df, writeheader=false)
     
     end
+
     return results_kernel_nested_df
 end
 
 @time results_kernel_nested_df = 
-    estimate_kernel_nested(D,1,scaling, [10^3],table)
+    estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec,table)
 
 # test for scaling 
 if 0 == 1
