@@ -11,7 +11,7 @@ tol = 1e-3
 D = 100
 simulation_num = 50
 scaling = [-20, -20, -20]
-N_cons_vec = [10^3] #[10^3, 2*10^3]
+N_cons_vec = [10^3,2*10^3,3*10^3]
 # @time res = Kernel_MPEC(data,maxtime,max_iter,tol,1)
 #results_MPEC = zeros(100, 7)
 function estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
@@ -58,12 +58,31 @@ end
 @time results_MPEC_df = 
     estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
 
-scaling = [-18, -4, -7]# ursu et al (2023)
-@time results_MPEC_df = 
-    estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
-scaling = [-50, -50, -50]# ursu et al (2023)
-@time results_MPEC_df = 
-    estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+# test for scaling 
+if 0 == 1
+    scaling = [-18, -4, -7]# ursu et al (2023)
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+    scaling = [-50, -50, -50]
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+    scaling = [-100, -100, -100]
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+
+    scaling = [-5, -5, -5]
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+    scaling = [-2, -2, -2]
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+    scaling = [-20, -20, -50]
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+end
+
+    
+
 
 param = [1.0, 0.7, 0.5, 0.3, -3.0]
 mean(results_MPEC_df[:,1] .- param[1])
