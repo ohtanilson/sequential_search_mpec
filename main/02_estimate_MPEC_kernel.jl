@@ -14,6 +14,8 @@ scaling = [-20, -20, -20]
 N_cons_vec = [10^3,2*10^3,3*10^3]
 # @time res = Kernel_MPEC(data,maxtime,max_iter,tol,1)
 #results_MPEC = zeros(100, 7)
+results_MPEC_df = DataFrame()
+
 function estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
     for N_cons = N_cons_vec
         @show N_cons
