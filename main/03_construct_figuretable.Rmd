@@ -17,26 +17,68 @@ library(magrittr)
 library(ggplot2)
 library(modelsummary) # for N in datasummary
 
-results_MPEC_1 <-
-  readr::read_csv(file = here::here("results/results_MPEC_1.csv"),
+results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-20.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
-    filename = "results_MPEC_1"
-  ) %>% 
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
-results_kernel <-
-  readr::read_csv(file = here::here("results/results_kernel.csv"),
+    filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-20"
+  ) #%>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
+results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_nested_kernel_consumer_1000_error_draw_100_scaling_-20-20-20.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
-    filename = "results_kernel"
+    filename = "results_nested_kernel_consumer_1000_error_draw_100_scaling_-20-20-20"
   ) 
-target_data <-
+
+results_MPEC_consumer_2000_error_draw_100_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_2000_error_draw_100_scaling_-20-20-20.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_MPEC_consumer_2000_error_draw_100_scaling_-20-20-20"
+  ) #%>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
+results_nested_kernel_consumer_2000_error_draw_100_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_nested_kernel_consumer_2000_error_draw_100_scaling_-20-20-20.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_nested_kernel_consumer_2000_error_draw_100_scaling_-20-20-20"
+  ) 
+results_MPEC_consumer_3000_error_draw_100_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_3000_error_draw_100_scaling_-20-20-20.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_MPEC_consumer_3000_error_draw_100_scaling_-20-20-20"
+  ) #%>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
+results_nested_kernel_consumer_3000_error_draw_100_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_nested_kernel_consumer_3000_error_draw_100_scaling_-20-20-20.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_nested_kernel_consumer_3000_error_draw_100_scaling_-20-20-20"
+  ) 
+target_data_consumer_1000_error_draw_100_scaling_20_20_20 <-
   rbind(
-    results_MPEC_1,
-    results_kernel
+    results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20,
+    results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20
   ) 
+target_data_consumer_2000_error_draw_100_scaling_20_20_20 <-
+  rbind(
+    results_MPEC_consumer_2000_error_draw_100_scaling_20_20_20,
+    results_nested_kernel_consumer_2000_error_draw_100_scaling_20_20_20
+  ) 
+target_data_consumer_3000_error_draw_100_scaling_20_20_20 <-
+  rbind(
+    results_MPEC_consumer_3000_error_draw_100_scaling_20_20_20,
+    results_nested_kernel_consumer_3000_error_draw_100_scaling_20_20_20
+  ) 
+
 true_parameter <-
   c(
     1.0,
@@ -45,7 +87,31 @@ true_parameter <-
     0.3,
     -3.0
   )
-colnames(target_data) <-
+colnames(target_data_consumer_1000_error_draw_100_scaling_20_20_20) <-
+  c(
+    "$\\beta_{1}$",
+    "$\\beta_{2}$",
+    "$\\beta_{3}$",
+    "$\\beta_{4}$",
+    "$\\log c$",
+    "loglik",
+    "time",
+    "converged",
+    "filename"
+    )
+colnames(target_data_consumer_2000_error_draw_100_scaling_20_20_20) <-
+  c(
+    "$\\beta_{1}$",
+    "$\\beta_{2}$",
+    "$\\beta_{3}$",
+    "$\\beta_{4}$",
+    "$\\log c$",
+    "loglik",
+    "time",
+    "converged",
+    "filename"
+    )
+colnames(target_data_consumer_3000_error_draw_100_scaling_20_20_20) <-
   c(
     "$\\beta_{1}$",
     "$\\beta_{2}$",
@@ -215,17 +281,37 @@ create_table_with_demand_shifter_bias_rmse <-
 ```
 
 
-## Table 1 {.tabset}
+## Table 1, Locally solved {.tabset}
 
-### Locally solved
+### consumer_1000_error_draw_100_scaling_20_20_20
 
 ```{r,echo=FALSE,results = "asis"}
+
 res <-
   create_table_with_demand_shifter_bias_rmse(
-    target_data = target_data
+    target_data = target_data_consumer_1000_error_draw_100_scaling_20_20_20
     )
 res
 ```
 
+### consumer_2000_error_draw_100_scaling_20_20_20
 
+```{r,echo=FALSE,results = "asis"}
 
+res <-
+  create_table_with_demand_shifter_bias_rmse(
+    target_data = target_data_consumer_2000_error_draw_100_scaling_20_20_20
+    )
+res
+```
+
+### consumer_3000_error_draw_100_scaling_20_20_20
+
+```{r,echo=FALSE,results = "asis"}
+
+res <-
+  create_table_with_demand_shifter_bias_rmse(
+    target_data = target_data_consumer_3000_error_draw_100_scaling_20_20_20
+    )
+res
+```

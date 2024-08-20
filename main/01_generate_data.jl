@@ -24,33 +24,42 @@ tableZ = copy(table)
 #options = Optim.Options(g_tol=1e-6, f_tol=1e-6, iterations=6000000, show_trace=false)
 
 # Setting parameters (obtained from file name)
-Random.seed!(1)
-# Number of epsilon+eta draws
-D = 100
 # Simulation inputs
 #N_cons = 10^3  # num of consumers
 N_prod = 5     # num of products
 param = [1, 0.7, 0.5, 0.3, -3]  # true parameter vector [4 brandFE, search cost constant (exp)]
 simulation_num = 50
 N_cons_vec = [10^3,2*10^3,3*10^3]
+
 # Simulate data
-for N_cons in N_cons_vec
-    @show N_cons
-    data = simWeitz(N_cons, N_prod, param, table, 1)
-    data = hcat(repeat([1],size(data,1)),data)
-    @time for i = 2:simulation_num
-        seed = i
-        data_i = simWeitz(N_cons, N_prod, param, table, seed)
-        data_i = hcat(repeat([i],size(data_i,1)),data_i)
-        data = vcat(data,data_i)
+simulate_data = function(N_cons_vec, D, N_prod, param, table)
+    for N_cons in N_cons_vec
+        @show N_cons
+        data = simWeitz(N_cons, N_prod, param, table, 1)
+        data = hcat(repeat([1],size(data,1)),data)
+        @time for i = 2:simulation_num
+            seed = i
+            data_i = simWeitz(N_cons, N_prod, param, table, seed)
+            data_i = hcat(repeat([i],size(data_i,1)),data_i)
+            data = vcat(data,data_i)
+        end
+        filename_begin = "../sequential_search_mpec/output/sim_data"
+        filename_end   = ".csv"
+        # if sigma == 1 || sigma == 2
+        #     sigma = Int64(sigma)
+        # end
+        filename = filename_begin*"_consumer_"*string(N_cons)*"_error_draw_"*string(D)*filename_end
+        CSV.write(filename, Tables.table(data))
     end
-    filename_begin = "../sequential_search_mpec/output/sim_data"
-    filename_end   = ".csv"
-    # if sigma == 1 || sigma == 2
-    #     sigma = Int64(sigma)
-    # end
-    filename = filename_begin*"_consumer_"*string(N_cons)*"_error_draw_"*string(D)*filename_end
-    CSV.write(filename, Tables.table(data))
+end
+
+
+# Number of epsilon+eta draws
+Random.seed!(1)
+D_list = [100, 1000]
+for D in D_list
+    @show D
+    simulate_data(N_cons_vec, D, N_prod, param, table)
 end
 
 #dataa = CSV.read("data/sim_data_100.csv", DataFrame) |> Matrix

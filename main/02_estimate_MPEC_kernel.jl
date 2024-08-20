@@ -28,10 +28,11 @@ function estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_c
         data_all = CSV.read(filename, DataFrame) 
         #@time @threads for i = 1:simulation_num # for parallel computation
         @time for i = 1:simulation_num #100 #
+            seed = i
             #data
             data = data_all[data_all[:, 1] .== i, 2:end] |> Matrix{Float64}    
             run_time = @elapsed begin 
-                    res_mpec = Kernel_MPEC(data,scaling,D,maxtime,max_iter,tol,i)
+                    res_mpec = Kernel_MPEC(data,scaling,D,maxtime,max_iter,tol,seed)
                 end
             
             results_MPEC[i, 1:5] .= [res_mpec[1];log(res_mpec[2])] 
@@ -57,8 +58,12 @@ function estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_c
     return results_MPEC_df
 end
 
-@time results_MPEC_df = 
-    estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+D_list = [1000] #[100, 1000]
+for D in D_list
+    @show D
+    @time estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+end
+
 
 # test for scaling 
 if 0 == 1
