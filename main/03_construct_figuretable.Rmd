@@ -37,6 +37,9 @@ target_data <-
     results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20,
     results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20
   ) 
+sum(results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20$X6 -
+  results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20$X6 > 0)
+
 true_parameter <-
   c(
     1.0,

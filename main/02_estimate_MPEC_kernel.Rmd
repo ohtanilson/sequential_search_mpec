@@ -22,65 +22,65 @@ results_MPEC_consumer_1000_error_draw_100_scaling_2_2_2 <-
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-2-2-2"
-  ) %>% 
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
+  )# %>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
 results_MPEC_consumer_1000_error_draw_100_scaling_5_5_5 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-5-5-5.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-5-5-5"
-  ) %>% 
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
+  ) #%>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
 results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-20.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-20"
-  ) %>% 
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
+  ) #%>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
 results_MPEC_consumer_1000_error_draw_100_scaling_18_4_7 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-18-4-7.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-18-4-7"
-  ) %>% 
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
+  ) #%>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
 results_MPEC_consumer_1000_error_draw_100_scaling_50_50_50 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-50-50-50.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-50-50-50"
-  ) %>% 
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
+  ) #%>% 
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
 results_MPEC_consumer_1000_error_draw_100_scaling_100_100_100 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-100-100-100.csv"),
                   col_names = FALSE) %>%
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-100-100-100"
-  ) %>%
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
+  ) #%>%
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
 
 results_MPEC_consumer_1000_error_draw_100_scaling_20_20_50 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-50.csv"),
                   col_names = FALSE) %>%
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-50"
-  ) %>%
-  dplyr::filter(
-    X8 == "LOCALLY_SOLVED"
-    )
+  ) #%>%
+  # dplyr::filter(
+  #   X8 == "LOCALLY_SOLVED"
+  #   )
 
 results_MPEC_consumer_1000_error_draw_200_scaling_20_20_20 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_200_scaling_-20-20-20.csv"),
