@@ -189,9 +189,11 @@ create_table_with_demand_shifter_bias_rmse <-
               nsmall = 3)
           ),
           "Locally solved" =
-            c("", t(temp_time_locally_solved[-1])[1,]),
+            c("",
+              t(temp_time_locally_solved[-1])[1,]),
           "Time" =
-            c("",t(temp_time_locally_solved[-1])[2,])
+            c("",round(t(temp_time_locally_solved[-1])[2,],
+                digits = 3))
         )
         
       
