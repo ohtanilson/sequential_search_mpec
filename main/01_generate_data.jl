@@ -56,7 +56,7 @@ end
 
 # Number of epsilon+eta draws
 Random.seed!(1)
-D_list = [100, 1000]
+D_list = [200]#[100, 200]
 for D in D_list
     @show D
     simulate_data(N_cons_vec, D, N_prod, param, table)

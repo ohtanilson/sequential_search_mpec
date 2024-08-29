@@ -81,6 +81,20 @@ results_MPEC_consumer_1000_error_draw_100_scaling_20_20_50 <-
   dplyr::filter(
     X8 == "LOCALLY_SOLVED"
     )
+
+results_MPEC_consumer_1000_error_draw_200_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_200_scaling_-20-20-20.csv"),
+                  col_names = FALSE) 
+
+results_MPEC_consumer_2000_error_draw_200_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_2000_error_draw_200_scaling_-20-20-20.csv"),
+                  col_names = FALSE) 
+
+results_MPEC_consumer_3000_error_draw_200_scaling_20_20_20 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_3000_error_draw_200_scaling_-20-20-20.csv"),
+                  col_names = FALSE) 
+
+
 true_parameter <-
   c(
     1.0,
@@ -99,7 +113,7 @@ true_parameter <-
 ```
 
 
-## Results {.tabset}
+## Scale change {.tabset}
 
 ### results_MPEC_consumer_1000_error_draw_100_scaling_18_4_7 (Ursu et al 2023)
 
@@ -138,3 +152,24 @@ modelsummary::datasummary_skim(results_MPEC_consumer_1000_error_draw_100_scaling
 modelsummary::datasummary_skim(results_MPEC_consumer_1000_error_draw_100_scaling_20_20_50)
 ```
 
+
+
+## Consumer change {.tabset}
+
+### results_MPEC_consumer_1000_error_draw_200_scaling_20_20_20
+
+```{r,echo=FALSE,results = "asis"}
+modelsummary::datasummary_skim(results_MPEC_consumer_1000_error_draw_200_scaling_20_20_20)
+```
+
+### results_MPEC_consumer_2000_error_draw_200_scaling_20_20_20
+
+```{r,echo=FALSE,results = "asis"}
+modelsummary::datasummary_skim(results_MPEC_consumer_2000_error_draw_200_scaling_20_20_20)
+```
+
+### results_MPEC_consumer_3000_error_draw_200_scaling_20_20_20
+
+```{r,echo=FALSE,results = "asis"}
+modelsummary::datasummary_skim(results_MPEC_consumer_3000_error_draw_200_scaling_20_20_20)
+```

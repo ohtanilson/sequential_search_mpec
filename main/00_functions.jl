@@ -118,7 +118,7 @@ function Kernel_MPEC(data::Matrix{Float64},scaling::Vector{Int64},D::Int64,maxti
     set_optimizer_attribute(model, "max_iter", max_iter)
     set_optimizer_attribute(model, "tol", tol)
     #global param # initial value list
-    @variable(model, par[i = 1:4],start = 0.0) 
+    @variable(model, par[i = 1:4] >= -2,start = 0.0) # to avoid very negative domain
     # @variable(model, par1,start = param[1]) 
     # @variable(model, par2,start = param[2]) 
     # @variable(model, par3,start = param[3]) 

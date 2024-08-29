@@ -58,7 +58,7 @@ function estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_c
     return results_MPEC_df
 end
 
-D_list = [1000] #[100, 1000]
+D_list = [200] #[100, 500]
 for D in D_list
     @show D
     @time estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
