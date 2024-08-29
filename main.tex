@@ -187,30 +187,26 @@ A remarkable advantage of MPEC is that it does not need an ad hoc look-up table 
 \section{Monte Carlo simulation results}
 
 For comparison, we follow Appendix B of \cite{ursu2023sequential} on the setting of the parameters of $\xi_{ij}$ and $c_{ij}$ in \eqref{eq:mpec_formula}. 
-We compare MPEC with their kernel-smoothed frequency estimator with a look-up table, the most frequently used method in empirical work.\footnote{The detailed construction is described in Appendix.} 
+We compare MPEC with their kernel-smoothed frequency estimator with a look-up table, the most frequently used method in empirical work.\footnote{The detailed construction is described in Appendix. For the kernel-smoothed frequency simulator, we need a tuning scaling vector.} 
 We use the same ad hoc table with \cite{ursu2023sequential} for which the grid fineness is 0.001.
 We construct 50 simulation data for 1,000 consumers who make search and purchase decisions in a sequential search manner with four brands and an outside option (with mean utility normalized to zero). The utility function only consists of brand intercepts, denoted as $(\beta_1,\beta_2,\beta_3,\beta_4)=(1.0, 0.7. 0.5, 0.3)$. 
 The log of search cost $\log c=-3.0$. We use $D=100$ draws of the error terms.
-\textcolor{blue}{For the kernel-smoothed frequency simulator, we use the
-scaling vector XXX. All estimations start from a vector of zeros. } Our replication Julia code is available on the authors' github.
+All estimations start from a vector of zeros.
+Our replication Julia code is available on the authors' github.
 
 \begin{table}[!htbp]
   \begin{center}
-      \caption{MPEC vs benchmark \textcolor{blue}{[TBA]}}
+      \caption{MPEC vs benchmark}
       \label{tb:results_MPEC_1_bias_rmse} 
       \subfloat[scale $\sigma=20$]{\input{figuretable/target_data_bias_rmse}}
-      \subfloat[scale ]{\input{figuretable/target_data_bias_rmse}}
   \end{center}
   \footnotesize
-  Note: \textcolor{blue}{We write Julia code for both estimations for fair comparison. The benchmark results correspond with Column (4) in Table B1: Monte Carlo Simulation Results of \cite{ursu2023sequential}.}
+  Note: We write Julia code for both estimations for fair comparison. The benchmark results correspond with Column (4) in Table B1: Monte Carlo Simulation Results of \cite{ursu2023sequential}.
 \end{table} 
 
 Table \ref{tb:results_MPEC_1_bias_rmse} reports the bias and root-mean-squared-error (RMSE) of estimated coefficients across the 50 data simulations.
-\textcolor{blue}{[TBA] It shows that our MPEC estimator achieves better performance in terms of bias and RMSE than the benchmark even without any ad hoc imposed assumption in a look-up table. 
-However, the computational time is longer than the benchmark.}
-\begin{itemize}
-    \item More MPEC advantages over benchmark.
-\end{itemize}
+It shows that our MPEC estimator achieves a slightly positive biased and larger RMSE performance than the benchmark even without any ad hoc imposed assumption in a look-up table. 
+The computational time is longer than the benchmark.
 
 \begin{table}[!htbp]
   \begin{center}
