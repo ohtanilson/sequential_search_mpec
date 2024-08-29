@@ -1,25 +1,29 @@
 \documentclass[12pt]{article}
 \usepackage[utf8]{inputenc}
-\usepackage{amsmath}
+\usepackage{amsmath,setspace,geometry}
+\usepackage{amsthm}
 \usepackage{amsfonts}
-%\usepackage[dvipdfmx]{hyperref,graphicx}
+\usepackage[shortlabels]{enumitem}
+\usepackage{rotating}
+\usepackage{pdflscape}
 \usepackage{graphicx}
-\usepackage{apacite}
-\usepackage{bm}
-
-\usepackage[colorlinks,citecolor=red,urlcolor=blue,bookmarks=false,hypertexnames=true]{hyperref,natbib} 
-\usepackage[top=15truemm]{geometry}
-%\usepackage[]{natbib} 
+\usepackage{bbm}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor= BrickRed, citecolor = BrickRed, filecolor = BrickRed, urlcolor = BrickRed, hypertexnames = true}
+\usepackage[]{natbib} 
 \bibpunct[:]{(}{)}{,}{a}{}{,}
-\setlength{\textwidth}{\paperwidth}     % ひとまず紙面を本文領域に
-\setlength{\oddsidemargin}{-5.4truemm}  % 左の余白を20mm(=1inch-5.4mm)に
-\setlength{\evensidemargin}{-5.4truemm} % 
-\addtolength{\textwidth}{-40truemm}     % 右の余白も20mmに
-\renewcommand{\baselinestretch}{0.3}
+\geometry{left = 1.0in,right = 1.0in,top = 1.0in,bottom = 1.0in}
+\usepackage[english]{babel}
 \usepackage{float}
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{booktabs}
+\usepackage{pdfpages}
+\usepackage{threeparttable}
+\usepackage{lscape}
+\usepackage{bm}
+
 \renewcommand*{\epsilon}{\varepsilon}
 
 \usepackage{setspace}
@@ -208,6 +212,24 @@ However, the computational time is longer than the benchmark.}
     \item More MPEC advantages over benchmark.
 \end{itemize}
 
+\begin{table}[!htbp]
+  \begin{center}
+      \caption{Summary of results\textcolor{blue}{[TBA]}}
+      \begin{tabular}{lcccc} \hline
+   Approach &  Speed & Accuracy & Sample size & Tuning\\ 
+   \hline
+   Look-up table &  Good & bad & small & construction of table \\ 
+   Contraction mapping & bad & good & small & Tolerance \\ 
+   Newton & bad & good & small & Tolerance \\ 
+   MPEC & good & good & large & None \\ 
+   \hline
+ \end{tabular}
+ \label{tb:results} 
+  \end{center}
+  \footnotesize
+  Note: 
+\end{table} 
+
 
 
 \section{Conclusion}
@@ -220,6 +242,9 @@ We propose an MPEC estimator that avoids approximation and estimation of equilib
 Of course, the cost is that it is more computationally demanding.
 However, this is not a big concern now, given the computing power
 of recent computers.
+
+\bibliographystyle{aer}
+\bibliography{sequential_search}
 
 \newpage
 \appendix
@@ -254,12 +279,13 @@ Define
 \end{align*}
 
 \subsection{Kernel estimator}
+To overcome drawbacks of the crude estimator, the kernel estimator uses a smooth kernel function to obtain the log-likelihood. Specifically, we use a multivariate scaled logistic cdf as the kernel function, which leads to the following the consumer-draw-specific likelihood contribution:
+\begin{align*}
+    L_i^d = \frac{1}{1 + \sum_{k=1}^2 \sum_{h \in S_i} \exp (- \rho_k v^d_{i,kh}) +  + \sum_{k=1}^2 \exp (- \rho_k v^d_{i,k})},
+\end{align*}
+where $\rho_k$ is a scaling parameter for each condition, which needs to be chosen by the researchers. The estimation procedure to obtain $v_k$ is the same as the crude estimator.
 
-\begin{itemize}
-    \item \textcolor{blue}{[TBA]}
-\end{itemize}
 
-\bibliographystyle{aer}
-\bibliography{sequential_search}
+
 
 \end{document}
