@@ -181,15 +181,15 @@ A remarkable advantage of MPEC is that it does not need an ad hoc look-up table 
 
 For the purposes of comparison, we adhere to the parameter settings of \(\xi_{ij}\) and \(c_{ij}\) in \eqref{eq:mpec_formula} as outlined in Appendix B of \cite{ursu2023sequential}. We compare the MPEC approach with their kernel-smoothed frequency estimator, which utilizes a look-up table—a method frequently employed in empirical research.\footnote{The detailed construction is described in the Appendix.} We use the same ad hoc table as \cite{ursu2023sequential}, with a grid fineness of 0.001.
 
-We generate 50 simulated datasets, each representing 1,000 consumers who engage in search and purchase decisions in a sequential manner across four brands and an outside option (with the mean utility of the outside option normalized to zero). The utility function consists solely of brand intercepts, specified as \((\beta_1,\beta_2,\beta_3,\beta_4) = (1.0, 0.7, 0.5, 0.3)\). The logarithm of the search cost is set to \(\log c = -3.0\). We use \(D = 100\) draws for the error terms. All estimations are initiated from a vector of zeros. Our replication code, written in Julia, is available on the authors' GitHub.
+We generate 50 simulated datasets, each representing $N$ consumers who engage in search and purchase decisions in a sequential manner across four brands and an outside option (with the mean utility of the outside option normalized to zero). The utility function consists solely of brand intercepts, specified as \((\beta_1,\beta_2,\beta_3,\beta_4) = (1.0, 0.7, 0.5, 0.3)\). The logarithm of the search cost is set to \(\log c = -3.0\). We use \(D = 100\) draws for the error terms. All estimations are initiated from a vector of zeros. Our replication code, written in Julia, is available on the authors' GitHub.
 
 
 \begin{table}[!htbp]
   \begin{center}
       \caption{MPEC vs benchmark}
       \label{tb:results_MPEC_1_bias_rmse} 
-      %\subfloat[scale $\sigma=20$]{\input{figuretable/target_data_bias_rmse}}
-      \input{figuretable/target_data_bias_rmse}
+      \subfloat[scale $N=500$]{\input{figuretable/target_data_consumer_500_bias_rmse}}\\
+      \subfloat[scale $N=1000$]{\input{figuretable/target_data_consumer_1000_bias_rmse}}
   \end{center}
   \footnotesize
   Note: We write Julia code for both estimations for fair comparison. The benchmark results correspond with Column (4) in Table B1: Monte Carlo Simulation Results of \cite{ursu2023sequential}, replicating similar results.
