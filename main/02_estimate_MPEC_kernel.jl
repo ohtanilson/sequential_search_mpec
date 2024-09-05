@@ -11,7 +11,7 @@ tol = 1e-3
 D = 100
 simulation_num = 50
 scaling = [-20, -20, -20]
-N_cons_vec = [10^3]#[10^3,2*10^3,3*10^3]
+N_cons_vec = [10^3]#[500, 10^3,2*10^3,3*10^3]
 # @time res = Kernel_MPEC(data,maxtime,max_iter,tol,1)
 #results_MPEC = zeros(100, 7)
 results_MPEC_df = DataFrame()
@@ -81,6 +81,12 @@ if 0 == 1
     @time results_MPEC_df = 
         estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
     scaling = [-10, -10, -10]
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+    scaling = [-12, -12, -12]
+    @time results_MPEC_df = 
+        estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
+    scaling = [-15, -15, -15]
     @time results_MPEC_df = 
         estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
     scaling = [-2, -2, -2]

@@ -22,20 +22,34 @@ results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20 <-
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-20"
-  ) #%>% 
-  # dplyr::filter(
-  #   X4 >= -3
-  # )
+  )
+results_MPEC_consumer_500_error_draw_100_scaling_10_10_10 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_500_error_draw_100_scaling_-10-10-10.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_MPEC_consumer_500_error_draw_100_scaling_-10-10-10"
+  )
 results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20 <-
   readr::read_csv(file = here::here("output/results_nested_kernel_consumer_1000_error_draw_100_scaling_-20-20-20.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_nested_kernel_consumer_1000_error_draw_100_scaling_-20-20-20"
   ) 
-target_data <-
+results_nested_kernel_consumer_500_error_draw_100_scaling_10_10_10 <-
+  readr::read_csv(file = here::here("output/results_nested_kernel_consumer_500_error_draw_100_scaling_-10-10-10.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_nested_kernel_consumer_500_error_draw_100_scaling_-10-10-10"
+  ) 
+target_data_consumer_1000 <-
   rbind(
     results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20,
     results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20
+  ) 
+target_data_consumer_500 <-
+  rbind(
+    results_MPEC_consumer_500_error_draw_100_scaling_10_10_10,
+    results_nested_kernel_consumer_500_error_draw_100_scaling_10_10_10
   ) 
 sum(results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20$X6 -
   results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20$X6 > 0)
@@ -50,7 +64,19 @@ true_parameter <-
   )
 n_sim <-
   50
-colnames(target_data) <-
+colnames(target_data_consumer_500) <-
+  c(
+    "$\\beta_{1}$",
+    "$\\beta_{2}$",
+    "$\\beta_{3}$",
+    "$\\beta_{4}$",
+    "$\\log c$",
+    "loglik",
+    "time",
+    "converged",
+    "filename"
+    )
+colnames(target_data_consumer_1000) <-
   c(
     "$\\beta_{1}$",
     "$\\beta_{2}$",
@@ -270,15 +296,26 @@ create_table_with_demand_shifter_bias_rmse <-
 
 ## Table 1 {.tabset}
 
-### Locally solved
+### consumer 1000
 
 ```{r,echo=FALSE,results = "asis"}
 res <-
   create_table_with_demand_shifter_bias_rmse(
-    target_data = target_data
+    target_data = target_data_consumer_1000
     )
 res
+
 ```
 
+### consumer 500
 
+```{r,echo=FALSE,results = "asis"}
+res <-
+  create_table_with_demand_shifter_bias_rmse(
+    target_data = target_data_consumer_500
+    )
+res
+
+target_data_consumer_500
+```
 

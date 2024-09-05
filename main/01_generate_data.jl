@@ -29,7 +29,7 @@ tableZ = copy(table)
 N_prod = 5     # num of products
 param = [1, 0.7, 0.5, 0.3, -3]  # true parameter vector [4 brandFE, search cost constant (exp)]
 simulation_num = 50
-N_cons_vec = [10^3,2*10^3,3*10^3]
+N_cons_vec = [500,10^3,2*10^3,3*10^3]
 
 # Simulate data
 simulate_data = function(N_cons_vec, D, N_prod, param, table)
