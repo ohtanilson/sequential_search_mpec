@@ -257,7 +257,7 @@ create_table_with_demand_shifter_bias_rmse <-
         "",
         "MPEC",
         "",
-        "Benchmark"#,
+        "ad hoc"#,
         #""#,
         # "200",
         # "",
