@@ -23,17 +23,30 @@ results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20 <-
   dplyr::mutate(
     filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-20-20-20"
   )
+results_MPEC_consumer_1000_error_draw_100_scaling_10_10_10 <-
+  readr::read_csv(file = here::here("output/results_MPEC_consumer_1000_error_draw_100_scaling_-10-10-10.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_MPEC_consumer_1000_error_draw_100_scaling_-10-10-10"
+  )
 results_MPEC_consumer_500_error_draw_100_scaling_10_10_10 <-
   readr::read_csv(file = here::here("output/results_MPEC_consumer_500_error_draw_100_scaling_-10-10-10.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_MPEC_consumer_500_error_draw_100_scaling_-10-10-10"
   )
+
 results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20 <-
   readr::read_csv(file = here::here("output/results_nested_kernel_consumer_1000_error_draw_100_scaling_-20-20-20.csv"),
                   col_names = FALSE) %>% 
   dplyr::mutate(
     filename = "results_nested_kernel_consumer_1000_error_draw_100_scaling_-20-20-20"
+  ) 
+results_nested_kernel_consumer_1000_error_draw_100_scaling_10_10_10 <-
+  readr::read_csv(file = here::here("output/results_nested_kernel_consumer_1000_error_draw_100_scaling_-10-10-10.csv"),
+                  col_names = FALSE) %>% 
+  dplyr::mutate(
+    filename = "results_nested_kernel_consumer_1000_error_draw_100_scaling_-10-10-10"
   ) 
 results_nested_kernel_consumer_500_error_draw_100_scaling_10_10_10 <-
   readr::read_csv(file = here::here("output/results_nested_kernel_consumer_500_error_draw_100_scaling_-10-10-10.csv"),
@@ -41,10 +54,11 @@ results_nested_kernel_consumer_500_error_draw_100_scaling_10_10_10 <-
   dplyr::mutate(
     filename = "results_nested_kernel_consumer_500_error_draw_100_scaling_-10-10-10"
   ) 
+
 target_data_consumer_1000 <-
   rbind(
-    results_MPEC_consumer_1000_error_draw_100_scaling_20_20_20,
-    results_nested_kernel_consumer_1000_error_draw_100_scaling_20_20_20
+    results_MPEC_consumer_1000_error_draw_100_scaling_10_10_10,
+    results_nested_kernel_consumer_1000_error_draw_100_scaling_10_10_10
   ) 
 target_data_consumer_500 <-
   rbind(
@@ -296,6 +310,16 @@ create_table_with_demand_shifter_bias_rmse <-
 
 ## Table 1 {.tabset}
 
+### consumer 500
+
+```{r,echo=FALSE,results = "asis"}
+res <-
+  create_table_with_demand_shifter_bias_rmse(
+    target_data = target_data_consumer_500
+    )
+res
+```
+
 ### consumer 1000
 
 ```{r,echo=FALSE,results = "asis"}
@@ -307,15 +331,5 @@ res
 
 ```
 
-### consumer 500
 
-```{r,echo=FALSE,results = "asis"}
-res <-
-  create_table_with_demand_shifter_bias_rmse(
-    target_data = target_data_consumer_500
-    )
-res
-
-target_data_consumer_500
-```
 
