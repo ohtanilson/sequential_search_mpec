@@ -41,11 +41,7 @@ Current version: \today}
 \begin{abstract}
 \noindent
 %150 words:
-In this paper, we propose a constrained maximum likelihood estimator for sequential search models, by formulating the estimation as an MPEC (Mathematical Programming with Equilibrium Constraints) problem. 
-Our approach improves the numerical accuracy and avoids introducing ad hoc components and estimation and approximation errors regarding equilibrium conditions. 
-Monte Carlo simulations show that the proposed estimator gives a biased estimator.
-Although the above seemingly provides pessimistic results, the MPEC approach is useful for finding candidate parameters comparable to the benchmark cheating on the ad hoc look-up table.
-Instead, MPEC can generate the table constructively as the solved equilibrium constraints in estimation.
+This paper proposes a constrained maximum likelihood estimator for sequential search models, using the MPEC (Mathematical Programming with Equilibrium Constraints) approach. This method enhances numerical accuracy while avoiding ad hoc components and errors related to equilibrium conditions. Monte Carlo simulations show that the estimator performs better in small samples, with lower bias and root-mean-squared error, though less effectively in large samples. Despite these mixed results, the MPEC approach remains valuable for identifying candidate parameters comparable to the benchmark, without relying on ad hoc look-up tables, as it generates the table through solved equilibrium constraints.
 \\
 %100 words AER
 \textbf{Keywords}: Sequential search model, Search cost, Demand estimation, MPEC \\
@@ -54,11 +50,11 @@ Instead, MPEC can generate the table constructively as the solved equilibrium co
 
 \section{Introduction}
 
-The consumer search process, through which individuals gather information about potential choices, is integral to understanding actual decision-making behavior. This search process has become increasingly observable to researchers, particularly through browsing data, which allows for the observation of the options an agent considers before making a final choice. The expanded availability of consumer search data has enabled researchers to estimate structural models of consumer search behavior, as discussed in \cite{ursu2023sequential}. The current benchmark model incorporates an inner loop step to solve implicit functions related to reservation prices in search decisions, treating this as a fixed-point problem—a method known for its computational complexity.
+The consumer search process, through which individuals gather information about choices, is essential to understanding decision-making behavior. This process has become increasingly observable to researchers through browsing data, which reveals the options considered before a final choice. The availability of such data has allowed for the estimation of structural models of consumer behavior, as noted by \cite{ursu2023sequential}. The current benchmark model solves implicit functions related to reservation prices using a fixed-point approach, which is computationally demanding.
 
-To address this challenge, we propose a novel estimator based on the Mathematical Program with Equilibrium Constraints (MPEC) approach, as advocated by \cite{su2012constrained}. MPEC is a constrained optimization problem in which the constraints include equilibrium conditions. A key advantage of the MPEC approach is that it avoids the need for iterative solutions to the fixed-point problem, a notable issue in demand estimation \citep{dube2012improving}, dynamic programming \citep{su2012constrained,egesdal2015estimating}, and misclassification models \citep{lu2014mpec}. Additionally, MPEC does not introduce the approximation and estimation errors of equilibrium constraints that are common in other approaches.
+To address this, we propose an estimator based on the Mathematical Program with Equilibrium Constraints (MPEC) approach \citep{su2012constrained}. MPEC is a constrained optimization problem incorporating equilibrium conditions and avoids iterative solutions to the fixed-point problem—a key issue in demand estimation \citep{dube2012improving}, dynamic programming \citep{su2012constrained}, and misclassification models \citep{lu2014mpec}. Furthermore, MPEC reduces approximation and estimation errors common in other approaches.
 
-Monte Carlo simulations indicate that MPEC performs comparably, though with a slightly larger bias, relative to the most prevalent estimation method that uses an ad hoc look-up table. Instead, while the results from MPEC may initially appear less optimistic, the approach is valuable for identifying candidate parameters that are on par with the benchmark, circumventing the need for the ad hoc look-up table. MPEC can generate this table constructively by solving the equilibrium constraints during estimation. We conclude that MPEC offers a viable alternative for obtaining benchmark estimates before transitioning to more complex models, particularly when the approximation and estimation errors associated with an ad hoc look-up table are unknown to researchers.
+Monte Carlo simulations show that MPEC performs comparably, with lower bias and root-mean-squared error (RMSE) in small samples but higher bias and RMSE in larger samples, relative to the common estimation method using an ad hoc look-up table. While the MPEC results may seem less favorable initially, the approach remains valuable for identifying parameters comparable to the benchmark, eliminating the need for the look-up table. MPEC can construct this table by solving the equilibrium constraints during estimation. We conclude that MPEC is a useful alternative for obtaining benchmark estimates before advancing to more complex models, especially when approximation and estimation errors from an ad hoc look-up table are unknown to researchers.
 
 
 
@@ -67,7 +63,7 @@ Monte Carlo simulations indicate that MPEC performs comparably, though with a sl
 
 \subsection{The Weitzman (1979) Framework}
 We construct the sequential search model based on \cite{weitzman1979optimal}.
-See the detail in the unified survey of \cite{ursu2023sequential} and \cite{honka2019empirical}. 
+See the detail in the unified survey of \cite{ursu2023sequential}. 
 A decision maker $i$ faces a set of $\mathcal{J}=\{1,\cdots,J\}$ boxes and box $j$ gives a potential reward $u_{ij}\in \mathbb{R}$ independently drawn from a known
 distribution $F_{ij}(u)$.
 Opening box $j$ takes cost $c_{ij}\in \mathbb{R}^{++}$. 
@@ -151,17 +147,16 @@ The third approach, introduced by \cite{elberg2019dynamic}, uses a contraction m
 
 The fourth method, proposed by \cite{morozov2023measuring}, directly estimates \( m(c_{ij}) \).
 
-\cite{ursu2023sequential} note that each method has its limitations: (1) the first method introduces errors due to the use of linear interpolations for search cost values that do not align with grid-point values; (2) the second and third methods avoid interpolation errors but require iterative computation of \( m \) and the establishment of a convergence threshold, which may lead to numerical errors if the threshold is too loose; and (3) the fourth method involves estimation error on \( m(c_{ij}) \). In practice, both the second and third methods tend to converge rapidly and allow researchers to set tight convergence thresholds, thereby minimizing numerical issues \citep{ursu2023sequential}. Similar challenges in demand estimation are discussed and addressed by the MPEC approach, which is introduced in the following section \citep{dube2012improving}.
+\cite{ursu2023sequential} highlight limitations in each method: (1) the first method introduces errors due to linear interpolation for search cost values that do not align with grid points; (2) the second and third methods avoid interpolation errors but require iterative computation of \( m \) and a convergence threshold, which can cause numerical errors if the threshold is too loose; and (3) the fourth method involves estimation errors for \( m(c_{ij}) \). In practice, the second and third methods typically converge quickly, allowing for tight convergence thresholds that minimize numerical issues \citep{ursu2023sequential}. Similar challenges in demand estimation are addressed by the MPEC approach, discussed in the following section \citep{dube2012improving}.
 
 
 
 \section{An MPEC estimator for the sequential search model}
-As the fifth method, we propose a novel and simple estimator for the sequential search model by utilizing the Mathematical Programming with Equilibrium Constraints (MPEC) procedure advocated by \cite{su2012constrained}. 
-Our setting is similar to \cite{su2012constrained} in which the likelihood function function with equilibrium constraints is constructed. 
-MPEC estimator avoids iterative computations to find the fixed point by evaluating the equilibrium equations as constraints.
+As a fifth method, we propose a novel and straightforward estimator for the sequential search model, utilizing the Mathematical Programming with Equilibrium Constraints (MPEC) approach introduced by \cite{su2012constrained}. 
+%Our framework closely follows \cite{su2012constrained}, where the likelihood function is constructed with equilibrium constraints. 
+The MPEC estimator bypasses the need for iterative computations to find the fixed point by treating the equilibrium equations as constraints.
 
-Define $\theta$ as a set of parameters.
-Given the optimal decision rules and reservation utility formula, an MPEC estimator solves the following constrained problem:
+Let \(\theta\) represent the set of parameters. Given the optimal decision rules and the reservation utility formula, the MPEC estimator solves the following constrained optimization problem:
 \begin{align}
     \max_{\theta}& \sum_{i\in \mathcal{N}} \log L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})\nonumber\\
     \text{s.t.}\quad u_{i j} & =\xi_{i j}+\mu_{i j}+\varepsilon_{i j}\label{eq:mpec_formula}\\
@@ -179,29 +174,30 @@ A remarkable advantage of MPEC is that it does not need an ad hoc look-up table 
 
 \section{Monte Carlo simulation results}
 
-For the purposes of comparison, we adhere to the parameter settings of \(\xi_{ij}\) and \(c_{ij}\) in \eqref{eq:mpec_formula} as outlined in Appendix B of \cite{ursu2023sequential}. We compare the MPEC approach with their kernel-smoothed frequency estimator, which utilizes a look-up table—a method frequently employed in empirical research.\footnote{The detailed construction is described in the Appendix.} We use the same ad hoc table as \cite{ursu2023sequential}, with a grid fineness of 0.001.
-
-We generate 50 simulated datasets, each representing $N$ consumers who engage in search and purchase decisions in a sequential manner across four brands and an outside option (with the mean utility of the outside option normalized to zero). The utility function consists solely of brand intercepts, specified as \((\beta_1,\beta_2,\beta_3,\beta_4) = (1.0, 0.7, 0.5, 0.3)\). The logarithm of the search cost is set to \(\log c = -3.0\). We use \(D = 100\) draws for the error terms. All estimations are initiated from a vector of zeros. Our replication code, written in Julia, is available on the authors' GitHub.
+For comparison, we follow the parameter settings for \(\xi_{ij}\) and \(c_{ij}\) in \eqref{eq:mpec_formula} as described in Appendix B of \cite{ursu2023sequential}. We evaluate the MPEC approach against their kernel-smoothed frequency estimator (benchmark), which employs a look-up table—commonly used in empirical research.\footnote{Detailed construction is provided in the Appendix.} The same ad hoc table from \cite{ursu2023sequential}, with a grid fineness of 0.001, is utilized.
+We generate 50 simulated datasets, each representing \(N\in\{500,1000\}\) consumers who make sequential search and purchase decisions across four brands and an outside option (with the mean utility of the outside option normalized to zero). The utility function includes only brand intercepts, specified as \((\beta_1,\beta_2,\beta_3,\beta_4) = (1.0, 0.7, 0.5, 0.3)\). The search cost logarithm is set at \(\log c = -3.0\), and \(D = 100\) draws are used for the error terms. All estimations start from an initial vector of zeros. The replication code, written in Julia for fair comparison, is available on the authors' GitHub.
 
 
 \begin{table}[!htbp]
   \begin{center}
-      \caption{MPEC vs benchmark}
+      \caption{MPEC vs ad hoc look-up (benchmark)}
       \label{tb:results_MPEC_1_bias_rmse} 
-      \subfloat[scale $N=500$]{\input{figuretable/target_data_consumer_500_bias_rmse}}\\
-      \subfloat[scale $N=1000$]{\input{figuretable/target_data_consumer_1000_bias_rmse}}
+      \subfloat[$N=500$]{\input{figuretable/target_data_consumer_500_bias_rmse}}
+      \subfloat[$N=1000$]{\input{figuretable/target_data_consumer_1000_bias_rmse}}
   \end{center}
   \footnotesize
-  Note: We write Julia code for both estimations for fair comparison. The benchmark results correspond with Column (4) in Table B1: Monte Carlo Simulation Results of \cite{ursu2023sequential}, replicating similar results.
+  Note: The benchmark results correspond with Column (4) in Table B1: Monte Carlo Simulation Results of \cite{ursu2023sequential}, replicating similar results. We compute the finish time for locally solved cases on average. 
 \end{table} 
 
-Table \ref{tb:results_MPEC_1_bias_rmse} presents the bias and root-mean-squared error (RMSE) of the estimated coefficients across the 50 simulated datasets. The results indicate that our MPEC estimator exhibits a positive bias and a higher RMSE compared to the benchmark. Additionally, the percentage of locally solved instances is 0.22 lower than that of the benchmark, and the computational time required is longer. While these findings might initially appear discouraging, we argue that the MPEC approach remains valuable for identifying candidate parameters that are comparable to those derived using the benchmark method, which relies on an ad hoc look-up table. Moreover, the MPEC approach can generate this table constructively by solving the equilibrium constraints during the estimation process.
+Table \ref{tb:results_MPEC_1_bias_rmse} presents the bias and RMSE of the estimated coefficients across 50 simulated datasets. Panel (a) shows that while the MPEC estimator has a positive bias, it achieves a smaller RMSE than the benchmark in small samples, consistent with MPEC misclassification model \citep{lu2014mpec}. However, Panel (b) reveals that MPEC performs worse in both bias and RMSE for larger samples, except for the search cost \(c\). Additionally, MPEC requires over four times the computational time and faces challenges in finding local optima. 
+
+Despite these seemingly discouraging results, we argue that the MPEC approach remains useful for identifying candidate parameters comparable to those from the benchmark method, which relies on an ad hoc look-up table. Furthermore, MPEC can construct this table dynamically by solving the equilibrium constraints during the estimation process.
 
 \section{Conclusion}
 
-The optimal sequential search model, based on \cite{weitzman1979optimal}, has been extensively applied in empirical research, with various approaches reviewed by \cite{ursu2023sequential}. However, it is crucial to exercise caution regarding estimation and approximation accuracy. Additionally, the most commonly used approach depends on an ad hoc look-up table, the details of which are often unknown to researchers. The impact of this ad hoc component on estimates in finite samples remains uncertain.
+The optimal sequential search model, based on \cite{weitzman1979optimal}, has been widely used in empirical research, with key methods reviewed by \cite{ursu2023sequential}. However, caution is needed regarding estimation and approximation accuracy, as the commonly used approach relies on an ad hoc look-up table.
 
-To address these concerns, we propose an MPEC estimator that avoids the approximation and estimation of equilibrium constraints, albeit with a slight bias and higher RMSE. Despite these seemingly pessimistic results, the MPEC approach is still useful for identifying candidate parameters that are comparable to the benchmark, which relies on the ad hoc look-up table. Furthermore, the MPEC method offers the advantage of generating the look-up table constructively through the solved equilibrium constraints during the estimation process.
+To address these issues, we propose an MPEC estimator that bypasses the need for approximations and estimation of equilibrium constraints. Despite certain limitations, the MPEC approach proves useful for identifying parameters comparable to the benchmark while dynamically generating the look-up table during the estimation process.
 
 
 \bibliographystyle{aer}
