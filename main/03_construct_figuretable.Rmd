@@ -292,6 +292,13 @@ create_table_with_demand_shifter_bias_rmse <-
         booktabs = TRUE,
         linesep = ""
       ) %>% 
+      kableExtra::add_header_above(
+        c(
+          " ", 
+          "MPEC" = 2,
+          "Look-up table" = 2
+          )
+        ) %>% 
       kableExtra::save_kable(
         file = here::here(
           filelocation
