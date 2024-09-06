@@ -251,25 +251,9 @@ create_table_with_demand_shifter_bias_rmse <-
             temp_bias_rmse)
       }
     }
-    new_rows <-
-      data.frame(
-        #"Sample size ($T$)",
-        "",
-        "MPEC",
-        "",
-        "ad hoc"#,
-        #""#,
-        # "200",
-        # "",
-        # "1000"
-        )
-    colnames(new_rows) <-
-      colnames(all_bias_rmse)
+  
     all_bias_rmse_for_latex <-
-      rbind(
-        all_bias_rmse,
-        "Method" = new_rows
-        )
+        all_bias_rmse
     # rownames(all_bias_rmse_for_latex)[10] <-
     #   "Sample size ($T$)"
     filelocation <-
