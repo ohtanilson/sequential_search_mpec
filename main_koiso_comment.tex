@@ -53,10 +53,9 @@ This paper proposes a constrained maximum likelihood estimator for sequential se
 
 The consumer search process, through which individuals gather information about choices, is essential to understanding decision-making behavior. This process has become increasingly observable to researchers through browsing data, which reveals the options considered before a final choice. The availability of such data has allowed for the estimation of structural models of consumer behavior, as noted by \cite{ursu2023sequential}. The current benchmark model solves implicit functions related to reservation prices using a fixed-point approach, which is computationally demanding.
 
-To address this, we propose an estimator based on the Mathematical Program with Equilibrium Constraints (MPEC) approach \citep{su2012constrained}. MPEC is a constrained optimization problem subject to equilibrium conditions, that avoids iterative solutions to the fixed-point problem and removes approximation and estimation errors — a key issue in demand estimation \citep{dube2012improving}, dynamic programming \citep{su2012constrained}, and misclassification models \citep{lu2014mpec}. 
+To address this, we propose an estimator based on the Mathematical Program with Equilibrium Constraints (MPEC) approach \citep{su2012constrained}. {\color{blue}MPEC is a constrained optimization problem incorporating equilibrium conditions that avoids iterative solutions to the fixed-point problem (How about "MPEC is a constrained optimization problem subject to equilibrium conditions, which avoids iteratively solving the fixed-point problem"?)} and removes approximation and estimation errors {\color{blue}—a (space?)} key issue in demand estimation \citep{dube2012improving}, dynamic programming \citep{su2012constrained}, and misclassification models \citep{lu2014mpec}. 
 
-Monte Carlo simulations show that MPEC performs comparably, with lower bias and root-mean-squared error (RMSE) in small samples but higher bias and RMSE in larger samples, relative to the common estimation method using an ad hoc look-up table. The MPEC approach is particularly valuable for identifying parameters comparable to the benchmark, eliminating the need for the look-up table. MPEC can
-effectively construct this table by requiring the equilibrium constraints to be satisfied during estimation. We conclude that MPEC is a useful alternative for obtaining benchmark estimates before advancing to more complex models, especially when approximation and estimation errors from an ad hoc look-up table are unknown to researchers.
+Monte Carlo simulations show that MPEC performs comparably, with lower bias and root-mean-squared error (RMSE) in small samples but higher bias and RMSE in larger samples, relative to the common estimation method using an ad hoc look-up table. {\color{blue}While the MPEC results may seem less favorable initially, the approach remains valuable (unnecessary? How about "The MPEC approach is particularly valuable")} for identifying parameters comparable to the benchmark, eliminating the need for the look-up table. {\color{blue}MPEC can construct this table by solving the equilibrium constraints during estimation (how about "MPEC can effectively construct this table by requiring the equilibrium constraints to be satisfied at the end of estimation")}. We conclude that MPEC is a useful alternative for obtaining benchmark estimates before advancing to more complex models, especially when approximation and estimation errors from an ad hoc look-up table are unknown to researchers.
 
 
 
@@ -65,7 +64,7 @@ effectively construct this table by requiring the equilibrium constraints to be 
 
 \subsection{Framework}
 We construct the sequential search model based on \cite{weitzman1979optimal}.
-A decision maker $i$ faces a set of boxes $\mathcal{J}=\{1,\cdots,J\}$ and box $j$ gives a potential reward $u_{ij}\in \mathbb{R}$ independently drawn from a known
+A decision maker $i$ faces {\color{blue}a set of boxes $\mathcal{J}=\{1,\cdots,J\}$} and box $j$ gives a potential reward $u_{ij}\in \mathbb{R}$ independently drawn from a known
 distribution $F_{ij}(u)$.
 Opening box $j$ takes cost $c_{ij}\in \mathbb{R}^{++}$. 
 An outside option is denoted as $j = 0$ with a known reward $u_{i0}$ is available at no cost.
@@ -75,7 +74,9 @@ opens boxes via sequential search steps and her goal is to maximize her expected
 Suppose that the decision maker has opened a set \(S_{i}\) of boxes,
 which revealed a maximum reward value of \(u_{i}^{*}=\max _{j \in S_{i} \cup 0} u_{i j}\), and \(\bar{S}_{i}\) unopened boxes can still be
 opened. 
-Her dynamic programming problem choosing whether to stop opening boxes and get payoff \(u_{i}^{*}\), or to continue opening boxes is described by the following Bellman equation:
+Her dynamic programming problem{\color{blue},} choosing {\color{blue}whether} to stop opening boxes{\color{blue}, in which case she
+gets payoff \(u_{i}^{*}\) (how about just "get payoff \(u_{i}^{*}\)" to reduce number of words))}, or to continue opening boxes{\color{blue},} is described
+by the following Bellman equation:
 \begin{align}
     V\left(\bar{S}_{i}, u_{i}^{*}\right)=\max \left\{u_{i}^{*}, \max _{j \in \bar{S}_{i}}\left\{-c_{i j}+W_{j}\left(\bar{S}_{i}, u_{i}^{*}\right)\right\}\right\}\nonumber
 \end{align}
@@ -84,7 +85,7 @@ defined as
 \begin{align}
     W_{j}\left(\bar{S}_{i}, u_{i}^{*}\right)=V\left(\bar{S}_{i} \backslash j, u_{i}^{*}\right) \int_{-\infty}^{u_{i}^{*}} d F_{i j}(u)+\int_{u_{i}^{*}}^{\infty} V\left(\bar{S}_{i} \backslash j, u\right) d F_{i j}(u).\nonumber
 \end{align}
-The reservation utility of a product \(z_{i j}\) is the utility level defined as 
+{\color{blue}Also, (removed?)} the reservation utility of a product \(z_{i j}\) is the utility level defined as 
 \begin{align}
     \int_{z_{i j}}^{\infty}\left(u_{i j}-z_{i j}\right) d F_{i j}\left(u_{i j}\right)=c_{i j}.\nonumber
 \end{align}
@@ -156,15 +157,23 @@ As a fifth method, we propose a straightforward estimator for the sequential sea
 The MPEC estimator bypasses the need for iterative computations to find the fixed point by treating the equilibrium equations as constraints.
 
 Let \(\theta\) represent the set of parameters. The MPEC estimator solves the following constrained optimization problem:
+\color{blue}
 \begin{align}
     \max_{\theta}& \sum_{i\in \mathcal{N}} \log L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})\nonumber\\
-    \text{s.t.}\quad u_{i j} & =\xi_{i j}+\mu_{i j}+\varepsilon_{i j}\label{eq:mpec_formula}\\
+    \text{s.t.}\quad u_{i j} & =\xi_{i j}+\mu_{i j}+\varepsilon_{i j} \label{eq:mpec_formula}\\
     z_{i j}&=\xi_{i j}+\mu_{i j}+m\left(c_{i j}\right) \nonumber\\
     c_{i j}&=\phi(m)+m \times[\Phi(m)-1] \nonumber
 \end{align}
+How about
+\begin{align}
+    \max_{\theta}& \sum_{i\in \mathcal{N}} \log L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})\nonumber\\
+    \text{s.t.}\quad  
+    c_{i j}&=\phi(m)+m \times[\Phi(m)-1] \label{eq:mpec_formula}
+\end{align}
+\color{black}
 where individual likelihood $L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})$ is derived as
 \begin{align}
-    L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}}) &= \Pr (\underbrace{z_{ih} \geq \max_{k \in \mathcal{J}\setminus \{1,\cdots,h\}} z_{ik} \: \forall h \in S_i}_{\text{selection rule}}\nonumber\\
+    {\color{blue} L_{i}(\theta,(z_{ij})_{j\in \mathcal{J}},(u_{ij})_{j\in \mathcal{J}})} &= \Pr (\underbrace{z_{ih} \geq \max_{k \in \mathcal{J}\setminus \{1,\cdots,h\}} z_{ik} \: \forall h \in S_i}_{\text{selection rule}}\nonumber\\
     & \cap \underbrace{z_{ih} \geq \max_{k = 1}^{h-1} u_{ik} \: \forall h \in S_i \cap \max_{h \in S_i \cup \{0\}} u_{ih} \geq \max_{l \in \bar{S}_i} z_{il} }_{\text{stopping rule}}\nonumber\\
     & \cap \underbrace{u_{iy_i} \geq \max_{h \in S_i \cup \{0\}} u_{ih} }_{\text{choice rule}}). \label{eq:likelihood}
 \end{align}
