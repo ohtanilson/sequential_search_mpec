@@ -7,8 +7,7 @@ Distributed.@everywhere include("../main/00_functions.jl")
 # setup for nested kernel
 D = 100
 simulation_num = 50
-scaling = [-20, -20, -20]
-N_cons_vec = [10^3,2*10^3,3*10^3]
+N_cons_vec = [500, 10^3]#[10^3,2*10^3,3*10^3]
 table = readdlm("data/tableZ.csv", ',', Float64)
 results_kernel_nested_df = DataFrame()
 function estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec,table)
@@ -53,9 +52,13 @@ function estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec,table)
     return results_kernel_nested_df
 end
 
+scaling = [-20, -20, -20]
 @time results_kernel_nested_df = 
     estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec,table)
-
+scaling = [-10, -10, -10]
+@time results_kernel_nested_df = 
+    estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec,table)
+    
 # test for scaling 
 if 0 == 1
     scaling = [-18, -4, -7]# ursu et al (2023)
@@ -65,6 +68,9 @@ if 0 == 1
     @time results_kernel_nested_df = 
         estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec)
     scaling = [-100, -100, -100]
+    @time results_kernel_nested_df = 
+        estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec)
+    scaling = [-10, -10, -10]
     @time results_kernel_nested_df = 
         estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec)
 
@@ -79,19 +85,4 @@ if 0 == 1
         estimate_kernel_nested(D,simulation_num,scaling, N_cons_vec)
 end
 
-    
 
-
-param = [1.0, 0.7, 0.5, 0.3, -3.0]
-mean(results_kernel_nested_df[:,1] .- param[1])
-mean(results_kernel_nested_df[:,2] .- param[2])
-mean(results_kernel_nested_df[:,3] .- param[3])
-mean(results_kernel_nested_df[:,4] .- param[4])
-mean(results_kernel_nested_df[:,5] .- param[5])
-
-#standard deviation
-std(results_kernel_nested_df[:,1])
-std(results_kernel_nested_df[:,2])
-std(results_kernel_nested_df[:,3])
-std(results_kernel_nested_df[:,4])
-std(results_kernel_nested_df[:,5])

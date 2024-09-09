@@ -10,8 +10,7 @@ max_iter = 500
 tol = 1e-3
 D = 100
 simulation_num = 50
-scaling = [-20, -20, -20]
-N_cons_vec = [10^3]#[500, 10^3,2*10^3,3*10^3]
+N_cons_vec = [500,10^3]#[ 10^3,2*10^3,3*10^3]
 # @time res = Kernel_MPEC(data,maxtime,max_iter,tol,1)
 #results_MPEC = zeros(100, 7)
 results_MPEC_df = DataFrame()
@@ -58,12 +57,11 @@ function estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_c
     return results_MPEC_df
 end
 
-D_list = [100] #[100, 200]
-for D in D_list
-    @show D
-    @time estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
-end
+scaling = [-20, -20, -20]
+@time estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
 
+scaling = [-10, -10, -10]
+@time estimate_kernel_MPEC(maxtime,max_iter,tol,D,simulation_num,scaling, N_cons_vec)
 
 # test for scaling 
 if 0 == 1
