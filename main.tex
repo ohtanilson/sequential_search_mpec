@@ -185,10 +185,10 @@ We generate 50 simulated datasets, each representing \(N\in\{500,1000\}\) consum
       \subfloat[$N=1000$]{\input{figuretable/target_data_consumer_1000_bias_rmse}}
   \end{center}
   \footnotesize
-  Note: The benchmark results closely replicate Column (4) in Table B1: Monte Carlo Simulation Results from \cite{ursu2023sequential}. We also calculate the average finish time for locally solved cases.
+  Note: The benchmark results closely replicate Column (4) in Table B1: Monte Carlo Simulation Results from \cite{ursu2023sequential}. We calculate the average finish time for locally solved cases.
 \end{table} 
 
-Table \ref{tb:results_MPEC_1_bias_rmse} presents the bias and RMSE of the estimated coefficients. Panel (a) shows that the MPEC estimator, though still biased, achieves a smaller RMSE than the benchmark in small samples, aligning with \cite{lu2014mpec}. However, Panel (b) reveals worse performance in both bias and RMSE for larger samples, except for the search cost. MPEC also requires over four times the computational time and struggles with finding local optima.
+Table \ref{tb:results_MPEC_1_bias_rmse} presents the bias and RMSE of the estimated coefficients. Panel (a) shows that the MPEC estimator, though still biased, achieves a smaller bias and RMSE than the benchmark in small samples, aligning with the MPEC misclassification model \citep{lu2014mpec}. However, Panel (b) reveals worse performance in both bias and RMSE for larger samples, except for the search cost. MPEC also requires over four times the computational time and struggles with finding local optima.
 
 Despite these seemingly discouraging results, we argue that the MPEC approach remains useful for identifying candidate parameters comparable to those from the benchmark method, which relies on an ad hoc look-up table. Furthermore, MPEC can construct this table dynamically by solving the equilibrium constraints during the estimation process.
 
