@@ -8,3 +8,4 @@ paper/
 data/
 seq_code/
 results/
+*.jl
