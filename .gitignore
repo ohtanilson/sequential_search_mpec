@@ -9,4 +9,5 @@ data/
 seq_code/
 results/
 past_draft/
+input/
 *.jl
