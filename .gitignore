@@ -8,4 +8,5 @@ paper/
 data/
 seq_code/
 results/
+past_draft/
 *.jl
