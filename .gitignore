@@ -10,3 +10,6 @@ seq_code/
 results/
 past_draft/
 input/
+.zip
+.jl
+2409sequential_search_mpec/
